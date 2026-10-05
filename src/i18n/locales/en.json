@@ -1,4 +1,12 @@
 {
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "undo": "Undo",
+    "close": "Close",
+    "selectedItem": "{{label}} (current)"
+  },
   "tabs": {
     "today": "Today",
     "library": "Library",
@@ -10,10 +18,116 @@
   "placeholder": {
     "comingSoon": "Coming soon."
   },
+  "status": {
+    "incomplete": "Needs meaning",
+    "new": "New",
+    "learning": "Learning",
+    "young": "Young",
+    "mature": "Mature",
+    "suspended": "Suspended"
+  },
+  "fields": {
+    "term": "Term",
+    "translation": "Meaning",
+    "definition": "Definition",
+    "example": "Example",
+    "partOfSpeech": "Part of speech",
+    "forms": "Forms",
+    "pronunciation": "Pronunciation",
+    "notes": "Notes",
+    "source": "Source"
+  },
+  "today": {
+    "reviewComingSoon": "Reviews arrive soon.",
+    "inbox_one": "{{count}} word needs a meaning",
+    "inbox_other": "{{count}} words need a meaning",
+    "inboxHint": "Opens the inbox"
+  },
+  "library": {
+    "newDictionary": "New dictionary",
+    "reorder": "Reorder",
+    "doneReordering": "Done",
+    "empty": "No dictionaries yet.",
+    "nameWithIcon": "{{icon}} {{name}}",
+    "wordCount_one": "{{count}} word",
+    "wordCount_other": "{{count}} words",
+    "countsWithIncomplete_one": "{{count}} word, {{incomplete}} without meaning",
+    "countsWithIncomplete_other": "{{count}} words, {{incomplete}} without meaning",
+    "moveUp": "Move {{name}} up",
+    "moveDown": "Move {{name}} down"
+  },
+  "dictionaryForm": {
+    "newTitle": "New dictionary",
+    "editTitle": "Edit dictionary",
+    "firstLaunchIntro": "Create your first dictionary. Only the name is required.",
+    "name": "Name",
+    "termLang": "Language of the terms",
+    "meaningLang": "Language of the meanings",
+    "langPlaceholder": "Language code, e.g. de, en, ja"
+  },
+  "dictionary": {
+    "addWord": "Add a word",
+    "menu": "Dictionary options",
+    "sortAlpha": "A-Z",
+    "sortRecent": "Recent",
+    "empty": "No words yet.",
+    "editNameLanguages": "Name and languages",
+    "dailyReviewOn": "Remove from daily review",
+    "dailyReviewOff": "Include in daily review",
+    "deleteTitle": "Delete {{name}}?",
+    "deleteBody": "The dictionary and its words move to the trash. You can restore them for 30 days.",
+    "deleted": "{{name}} moved to the trash"
+  },
   "add": {
     "title": "Quick add",
-    "term": "Term: {{term}}",
-    "noTerm": "No term given."
+    "term": "Term",
+    "meaning": "Meaning (optional)",
+    "dictionary": "Dictionary",
+    "paste": "Paste",
+    "moreFields": "More fields",
+    "save": "Save",
+    "saveAndAnother": "Save and add another",
+    "saved": "Saved {{term}}",
+    "addDetails": "Add details",
+    "noDictionary": "Create a dictionary first, then add words to it.",
+    "duplicateExact": "Already in this dictionary: {{term}}",
+    "duplicatePossible": "Similar word: {{term}}",
+    "duplicateElsewhere": "Also in {{dictionary}}",
+    "openWord": "Open",
+    "openWordLabel": "Open {{term}}"
+  },
+  "word": {
+    "noMeaning": "No meaning yet",
+    "rowLabel": "{{term}}, {{meaning}}, {{status}}",
+    "notFound": "This word no longer exists.",
+    "star": "Star",
+    "unstar": "Remove star",
+    "menu": "Word options",
+    "moveTo": "Move to dictionary",
+    "deleted": "{{term}} moved to the trash",
+    "moved": "Moved {{term}} to {{dictionary}}",
+    "addDetails": "Add details",
+    "added": "Added {{date}}",
+    "editField": "{{field}}: {{value}}. Double tap to edit.",
+    "empty": "empty",
+    "tapToAdd": "Add {{field}}"
+  },
+  "inbox": {
+    "title": "Needs a meaning",
+    "intro": "Words saved without a translation or definition. They join reviews once they have one.",
+    "empty": "Every word has a meaning."
+  },
+  "trash": {
+    "title": "Trash",
+    "note_one": "Items here are deleted for good after {{count}} day.",
+    "note_other": "Items here are deleted for good after {{count}} days.",
+    "empty": "The trash is empty.",
+    "restore": "Restore",
+    "restoreLabel": "Restore {{name}}",
+    "restored": "Restored {{name}}",
+    "deletedOn": "Deleted {{date}}",
+    "dictionaryTitle": "Dictionary: {{name}}",
+    "wordSubtitle": "{{dictionary}} · {{deleted}}"
   },
   "startup": {
     "errorTitle": "Something went wrong",

@@ -1,14 +1,5 @@
-import { useTranslation } from 'react-i18next';
-
-import { Screen } from '@/ui/Screen';
-import { Text } from '@/ui/Text';
+import { LibraryScreen } from '@/features/dictionaries/components/LibraryScreen';
 
 export default function LibraryRoute() {
-  const { t } = useTranslation();
-
-  return (
-    <Screen title={t('tabs.library')}>
-      <Text tone="muted">{t('placeholder.comingSoon')}</Text>
-    </Screen>
-  );
+  return <LibraryScreen />;
 }

@@ -1,17 +1,20 @@
 import { useLocalSearchParams } from 'expo-router';
-import { useTranslation } from 'react-i18next';
 
-import { Screen } from '@/ui/Screen';
-import { Text } from '@/ui/Text';
+import type { DictionaryId } from '@/domain/models';
+import { QuickAddScreen } from '@/features/words/components/QuickAddScreen';
 
-// Placeholder for quick add. `/add?term=&context=` is the single entry for external capture.
+// `/add?term=&context=` is the single entry for external capture (deep link, share).
 export default function AddRoute() {
-  const { term } = useLocalSearchParams<{ term?: string }>();
-  const { t } = useTranslation();
-
+  const { term, context, dictionaryId } = useLocalSearchParams<{
+    term?: string;
+    context?: string;
+    dictionaryId?: string;
+  }>();
   return (
-    <Screen title={t('add.title')}>
-      <Text>{term ? t('add.term', { term }) : t('add.noTerm')}</Text>
-    </Screen>
+    <QuickAddScreen
+      initialTerm={term}
+      context={context}
+      dictionaryId={dictionaryId as DictionaryId | undefined}
+    />
   );
 }

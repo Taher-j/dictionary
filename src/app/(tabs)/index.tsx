@@ -1,14 +1,5 @@
-import { useTranslation } from 'react-i18next';
-
-import { Screen } from '@/ui/Screen';
-import { Text } from '@/ui/Text';
+import { TodayScreen } from '@/features/today/TodayScreen';
 
 export default function TodayRoute() {
-  const { t } = useTranslation();
-
-  return (
-    <Screen title={t('tabs.today')}>
-      <Text tone="muted">{t('placeholder.comingSoon')}</Text>
-    </Screen>
-  );
+  return <TodayScreen />;
 }

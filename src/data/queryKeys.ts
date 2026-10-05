@@ -17,8 +17,15 @@ export const wordKeys = {
   search: (text: string, query?: Omit<WordQuery, 'sort'>) =>
     [...wordKeys.searches(), text, query ?? {}] as const,
   detail: (id: WordId) => [...wordKeys.all, 'detail', id] as const,
+  incompleteCount: () => [...wordKeys.all, 'incompleteCount'] as const,
   duplicates: (dictionaryId: DictionaryId, term: string) =>
     [...wordKeys.all, 'duplicates', dictionaryId, term] as const,
+};
+
+export const trashKeys = {
+  all: ['trash'] as const,
+  words: () => [...trashKeys.all, 'words'] as const,
+  dictionaries: () => [...trashKeys.all, 'dictionaries'] as const,
 };
 
 export const tagKeys = {

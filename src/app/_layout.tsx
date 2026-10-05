@@ -12,6 +12,7 @@ import { StartupError } from '@/features/startup/StartupError';
 import { useAppStartup } from '@/features/startup/useAppStartup';
 import { createQueryClient } from '@/lib/queryClient';
 import { ThemeProvider } from '@/ui/ThemeProvider';
+import { ToastHost } from '@/ui/ToastHost';
 
 // Keep the splash screen up until the database is open and migrated.
 void SplashScreen.preventAutoHideAsync();
@@ -40,8 +41,21 @@ export default function RootLayout() {
             <Stack screenOptions={{ headerShown: false }}>
               <Stack.Screen name="(tabs)" />
               <Stack.Screen name="add" options={{ presentation: 'modal', title: t('add.title') }} />
+              <Stack.Screen
+                name="dictionary/new"
+                options={{ presentation: 'formSheet', sheetAllowedDetents: 'fitToContents' }}
+              />
+              <Stack.Screen
+                name="dictionary/[id]/edit"
+                options={{ presentation: 'formSheet', sheetAllowedDetents: 'fitToContents' }}
+              />
+              <Stack.Screen name="dictionary/[id]" options={{ headerShown: true, title: '' }} />
+              <Stack.Screen name="word/[id]" options={{ headerShown: true, title: '' }} />
+              <Stack.Screen name="inbox" options={{ headerShown: true, title: t('inbox.title') }} />
+              <Stack.Screen name="trash" options={{ headerShown: true, title: t('trash.title') }} />
               <Stack.Screen name="dev" options={{ presentation: 'modal', title: t('dev.title') }} />
             </Stack>
+            <ToastHost />
           </RepositoriesProvider>
         ) : null}
       </ThemeProvider>
