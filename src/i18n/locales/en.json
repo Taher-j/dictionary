@@ -1,0 +1,18 @@
+{
+  "tabs": {
+    "today": "Today",
+    "library": "Library",
+    "add": "Add",
+    "addLabel": "Add a word",
+    "stats": "Stats",
+    "settings": "Settings"
+  },
+  "placeholder": {
+    "comingSoon": "Coming soon."
+  },
+  "add": {
+    "title": "Quick add",
+    "term": "Term: {{term}}",
+    "noTerm": "No term given."
+  }
+}
