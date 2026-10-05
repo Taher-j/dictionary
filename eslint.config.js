@@ -19,6 +19,10 @@ const fsrsImports = {
   group: ['ts-fsrs', 'ts-fsrs/*'],
   message: 'Only src/domain/scheduler.ts may import ts-fsrs.',
 };
+const fileSystemImports = {
+  group: ['expo-file-system', 'expo-file-system/*'],
+  message: 'Only src/services may use the file system. Add or use a wrapper there.',
+};
 const domainForbiddenImports = {
   group: [
     'react',
@@ -76,13 +80,19 @@ module.exports = defineConfig([
           message: "Use textAlign: 'auto' or 'center'; left/right do not flip for RTL.",
         },
       ],
-      'no-restricted-imports': restrictImports(databaseImports, fsrsImports),
+      'no-restricted-imports': restrictImports(databaseImports, fsrsImports, fileSystemImports),
     },
   },
   {
     files: ['src/data/**/*.{ts,tsx}'],
     rules: {
-      'no-restricted-imports': restrictImports(fsrsImports),
+      'no-restricted-imports': restrictImports(fsrsImports, fileSystemImports),
+    },
+  },
+  {
+    files: ['src/services/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': restrictImports(databaseImports, fsrsImports),
     },
   },
   {
