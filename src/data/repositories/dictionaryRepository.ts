@@ -1,11 +1,21 @@
-import { and, asc, eq, isNull } from 'drizzle-orm';
+import { and, asc, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
 
 import { dictionaries, words } from '@/data/db/schema';
 import type { RepositoryDeps } from '@/data/repositories/deps';
-import type { Dictionary, DictionaryId, DictionaryPatch, NewDictionary } from '@/domain/models';
+import type {
+  Dictionary,
+  DictionaryId,
+  DictionaryPatch,
+  DictionaryWithCounts,
+  NewDictionary,
+} from '@/domain/models';
 
 export interface DictionaryRepository {
   list(): Promise<Dictionary[]>;
+  /** The Library list: word and incomplete-word counts per dictionary, in display order. */
+  listWithCounts(): Promise<DictionaryWithCounts[]>;
+  /** Trashed dictionaries, most recently deleted first. */
+  listDeleted(): Promise<Dictionary[]>;
   getById(id: DictionaryId): Promise<Dictionary | null>;
   create(input: NewDictionary): Promise<Dictionary>;
   update(id: DictionaryId, patch: DictionaryPatch): Promise<Dictionary>;
@@ -13,6 +23,8 @@ export interface DictionaryRepository {
   softDelete(id: DictionaryId): Promise<void>;
   /** Restores the dictionary and the words that were deleted together with it. */
   restore(id: DictionaryId): Promise<void>;
+  /** Moves a dictionary one place up or down in the Library order. */
+  move(id: DictionaryId, direction: 'up' | 'down'): Promise<void>;
 }
 
 type DictionaryRow = typeof dictionaries.$inferSelect;
@@ -44,6 +56,36 @@ export function createDictionaryRepository({
       return rows.map(toDictionary);
     },
 
+    async listWithCounts() {
+      const rows = db
+        .select({
+          dictionary: dictionaries,
+          wordCount: sql<number>`count(${words.id})`,
+          incompleteCount: sql<number>`count(CASE WHEN ${words.translation} IS NULL AND ${words.definition} IS NULL THEN ${words.id} END)`,
+        })
+        .from(dictionaries)
+        .leftJoin(words, and(eq(words.dictionaryId, dictionaries.id), isNull(words.deletedAt)))
+        .where(isNull(dictionaries.deletedAt))
+        .groupBy(dictionaries.id)
+        .orderBy(asc(dictionaries.position), asc(dictionaries.name))
+        .all();
+      return rows.map((r) => ({
+        ...toDictionary(r.dictionary),
+        wordCount: Number(r.wordCount),
+        incompleteCount: Number(r.incompleteCount),
+      }));
+    },
+
+    async listDeleted() {
+      return db
+        .select()
+        .from(dictionaries)
+        .where(isNotNull(dictionaries.deletedAt))
+        .orderBy(desc(dictionaries.deletedAt), asc(dictionaries.id))
+        .all()
+        .map(toDictionary);
+    },
+
     async getById(id) {
       const row = getRow(id);
       return row ? toDictionary(row) : null;
@@ -51,18 +93,38 @@ export function createDictionaryRepository({
 
     async create(input) {
       const at = now();
-      const row = db
-        .insert(dictionaries)
-        .values({ ...input, id: newId(), createdAt: at, updatedAt: at })
-        .returning()
-        .get();
+      const row = db.transaction((tx) => {
+        // New dictionaries go to the end of the Library unless a position is given.
+        const [last] = tx
+          .select({ max: sql<number | null>`max(${dictionaries.position})` })
+          .from(dictionaries)
+          .where(isNull(dictionaries.deletedAt))
+          .all();
+        const position = input.position ?? (last?.max ?? -1) + 1;
+        return tx
+          .insert(dictionaries)
+          .values({
+            ...input,
+            name: input.name.trim(),
+            position,
+            id: newId(),
+            createdAt: at,
+            updatedAt: at,
+          })
+          .returning()
+          .get();
+      });
       return toDictionary(row);
     },
 
     async update(id, patch) {
       const row = db
         .update(dictionaries)
-        .set({ ...patch, updatedAt: now() })
+        .set({
+          ...patch,
+          ...(patch.name !== undefined ? { name: patch.name.trim() } : {}),
+          updatedAt: now(),
+        })
         .where(and(eq(dictionaries.id, id), isNull(dictionaries.deletedAt)))
         .returning()
         .get();
@@ -97,6 +159,32 @@ export function createDictionaryRepository({
           .set({ deletedAt: null, updatedAt: at })
           .where(eq(dictionaries.id, id))
           .run();
+      });
+    },
+
+    async move(id, direction) {
+      const at = now();
+      db.transaction((tx) => {
+        const ordered = tx
+          .select({ id: dictionaries.id, position: dictionaries.position })
+          .from(dictionaries)
+          .where(isNull(dictionaries.deletedAt))
+          .orderBy(asc(dictionaries.position), asc(dictionaries.name))
+          .all();
+        const from = ordered.findIndex((d) => d.id === id);
+        const to = direction === 'up' ? from - 1 : from + 1;
+        if (from < 0 || to < 0 || to >= ordered.length) return;
+        const [moved] = ordered.splice(from, 1);
+        if (!moved) return;
+        ordered.splice(to, 0, moved);
+        // Rewrite positions as 0..n-1; touch only rows whose position changed.
+        ordered.forEach((d, position) => {
+          if (d.position === position) return;
+          tx.update(dictionaries)
+            .set({ position, updatedAt: at })
+            .where(eq(dictionaries.id, d.id))
+            .run();
+        });
       });
     },
   };

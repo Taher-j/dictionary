@@ -314,3 +314,26 @@ describe('WordRepository.findDuplicates', () => {
     expect(matches).toHaveLength(3);
   });
 });
+
+describe('Inbox (incomplete words)', () => {
+  it('lists and counts words without a meaning, across dictionaries', async () => {
+    const { repos, de, en, tick } = await setup();
+    await repos.words.create({ dictionaryId: de.id, term: 'Haus', translation: 'house' });
+    const a = await repos.words.create({ dictionaryId: de.id, term: 'Baum' });
+    tick();
+    const b = await repos.words.create({ dictionaryId: en.id, term: 'tree', definition: '  ' });
+    const trashed = await repos.words.create({ dictionaryId: en.id, term: 'gone' });
+    await repos.words.softDelete([trashed.id]);
+
+    const page = await repos.words.list({ incomplete: true, sort: 'recent' });
+    expect(page.items.map((w) => w.id)).toEqual([b.id, a.id]);
+    expect(page.items.every((w) => w.status === 'incomplete')).toBe(true);
+    expect(await repos.words.countIncomplete()).toBe(2);
+
+    // Completing a word creates exactly one card and removes it from the Inbox.
+    await repos.words.update(a.id, { translation: 'tree' });
+    await repos.words.update(a.id, { definition: 'a tall plant' });
+    expect(await repos.cards.listForWord(a.id)).toHaveLength(1);
+    expect(await repos.words.countIncomplete()).toBe(1);
+  });
+});

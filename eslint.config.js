@@ -20,8 +20,18 @@ const fsrsImports = {
   message: 'Only src/domain/scheduler.ts may import ts-fsrs.',
 };
 const fileSystemImports = {
-  group: ['expo-file-system', 'expo-file-system/*'],
-  message: 'Only src/services may use the file system. Add or use a wrapper there.',
+  group: [
+    'expo-file-system',
+    'expo-file-system/*',
+    'expo-haptics',
+    'expo-clipboard',
+    'expo-crypto',
+    'expo-sharing',
+    'expo-document-picker',
+    'expo-speech',
+    'expo-notifications',
+  ],
+  message: 'Only src/services may use device modules. Add or use a wrapper there.',
 };
 const domainForbiddenImports = {
   group: [

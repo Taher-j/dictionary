@@ -4,6 +4,7 @@ import { openAppDatabase } from '@/data/db/client';
 import { createDevTools } from '@/data/devTools';
 import { createRepositories } from '@/data/repositories';
 import type { DataServices } from '@/data/RepositoriesProvider';
+import { purgeCutoff } from '@/domain/trash';
 import { systemClock } from '@/lib/clock';
 import { createIdGenerator } from '@/lib/ids';
 import { secureRandomBytes } from '@/services/random';
@@ -22,6 +23,8 @@ async function start(): Promise<DataServices> {
   const { db } = await openAppDatabase(createSnapshotStore(now));
   const deps = { db, now, newId: createIdGenerator({ now, randomBytes: secureRandomBytes }) };
   const repositories = createRepositories(deps);
+  // Trashed words and dictionaries are deleted for good after 30 days.
+  await repositories.trash.purge(purgeCutoff(now()));
   const devTools = __DEV__ ? createDevTools(deps, repositories, () => performance.now()) : null;
   return { repositories, devTools };
 }

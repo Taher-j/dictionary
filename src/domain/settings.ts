@@ -1,4 +1,4 @@
-import type { EpochMs } from '@/domain/models';
+import type { DictionaryId, EpochMs } from '@/domain/models';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
 
@@ -9,6 +9,8 @@ export interface Settings {
   sessionSize: number;
   hapticsEnabled: boolean;
   lastBackupAt: EpochMs | null;
+  /** Preselected in quick add. */
+  lastDictionaryId: DictionaryId | null;
 }
 
 export type SettingKey = keyof Settings;
@@ -19,4 +21,5 @@ export const defaultSettings: Settings = {
   sessionSize: 20,
   hapticsEnabled: true,
   lastBackupAt: null,
+  lastDictionaryId: null,
 };

@@ -13,6 +13,7 @@ import {
   type SettingsRepository,
 } from '@/data/repositories/settingsRepository';
 import { createTagRepository, type TagRepository } from '@/data/repositories/tagRepository';
+import { createTrashRepository, type TrashRepository } from '@/data/repositories/trashRepository';
 import { createWordRepository, type WordRepository } from '@/data/repositories/wordRepository';
 
 export interface Repositories {
@@ -22,6 +23,7 @@ export interface Repositories {
   cards: CardRepository;
   reviewLogs: ReviewLogRepository;
   settings: SettingsRepository;
+  trash: TrashRepository;
 }
 
 export type { RepositoryDeps };
@@ -34,5 +36,6 @@ export function createRepositories(deps: RepositoryDeps): Repositories {
     cards: createCardRepository(deps),
     reviewLogs: createReviewLogRepository(deps),
     settings: createSettingsRepository(deps),
+    trash: createTrashRepository(deps),
   };
 }

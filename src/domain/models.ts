@@ -157,6 +157,8 @@ export type WordSort = 'alpha' | 'recent';
 /** One filter object shared by lists and search. Tags, status and starred arrive in Milestone 3. */
 export interface WordQuery {
   dictionaryId?: DictionaryId;
+  /** Only words without a translation and definition (the Inbox). */
+  incomplete?: boolean;
   sort: WordSort;
   limit?: number;
 }
@@ -169,6 +171,21 @@ export interface Page<TItem, TCursor> {
   items: TItem[];
   nextCursor: TCursor | null;
 }
+
+export interface DictionaryWithCounts extends Dictionary {
+  wordCount: number;
+  incompleteCount: number;
+}
+
+export interface TrashedWord {
+  id: WordId;
+  dictionaryId: DictionaryId;
+  dictionaryName: string;
+  term: string;
+  deletedAt: EpochMs;
+}
+
+export type TrashCursor = { deletedAt: EpochMs; id: WordId };
 
 export type DuplicateTier = 'exact' | 'possible' | 'elsewhere';
 

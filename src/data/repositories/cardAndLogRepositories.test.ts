@@ -93,3 +93,14 @@ describe('SettingsRepository', () => {
     });
   });
 });
+
+describe('SettingsRepository lastDictionaryId', () => {
+  it('stores the last used dictionary', async () => {
+    const { repos } = await setup();
+    const [dictionary] = await repos.dictionaries.list();
+    expect(await repos.settings.get('lastDictionaryId')).toBeNull();
+    if (!dictionary) throw new Error('expected a dictionary');
+    await repos.settings.set('lastDictionaryId', dictionary.id);
+    expect(await repos.settings.get('lastDictionaryId')).toBe(dictionary.id);
+  });
+});

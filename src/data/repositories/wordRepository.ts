@@ -31,6 +31,8 @@ export interface WordRepository {
   getById(id: WordId): Promise<Word | null>;
   list(query: WordQuery, cursor?: WordCursor | null): Promise<Page<WordListItem, WordCursor>>;
   search(text: string, query?: Omit<WordQuery, 'sort'>): Promise<WordListItem[]>;
+  /** Words without a translation and definition (the Inbox badge). */
+  countIncomplete(): Promise<number>;
   findDuplicates(dictionaryId: DictionaryId, keys: TermKeys): Promise<DuplicateMatch[]>;
   create(input: NewWord): Promise<Word>;
   update(id: WordId, patch: WordPatch): Promise<Word>;
@@ -66,6 +68,8 @@ const listColumns = {
   cardScheduledDays: cards.scheduledDays,
   cardSuspended: cards.suspended,
 };
+
+const incomplete = and(isNull(words.translation), isNull(words.definition));
 
 const recognitionCardJoin = and(eq(cards.wordId, words.id), eq(cards.direction, 'recognition'));
 
@@ -185,6 +189,7 @@ export function createWordRepository({ db, now, newId }: RepositoryDeps): WordRe
       const limit = query.limit ?? DEFAULT_PAGE_SIZE;
       const conditions: (SQL | undefined)[] = [isNull(words.deletedAt)];
       if (query.dictionaryId) conditions.push(eq(words.dictionaryId, query.dictionaryId));
+      if (query.incomplete) conditions.push(incomplete);
 
       let rows: (ListRow & { termFold: string })[];
       if (query.sort === 'alpha') {
@@ -256,6 +261,15 @@ export function createWordRepository({ db, now, newId }: RepositoryDeps): WordRe
         .limit(query?.limit ?? SEARCH_LIMIT)
         .all();
       return rows.map(toListItem);
+    },
+
+    async countIncomplete() {
+      const [row] = db
+        .select({ n: sql<number>`count(*)` })
+        .from(words)
+        .where(and(isNull(words.deletedAt), incomplete))
+        .all();
+      return Number(row?.n ?? 0);
     },
 
     async findDuplicates(dictionaryId, keys) {
