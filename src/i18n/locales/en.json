@@ -14,5 +14,24 @@
     "title": "Quick add",
     "term": "Term: {{term}}",
     "noTerm": "No term given."
+  },
+  "startup": {
+    "errorTitle": "Something went wrong",
+    "errorBody": "Your data could not be opened. Nothing has been deleted. Restart the app; if this keeps happening, keep the app installed and contact support."
+  },
+  "dev": {
+    "title": "Developer tools",
+    "open": "Developer tools",
+    "unavailable": "Developer tools are only available in development builds.",
+    "counts": "{{words}} words, {{cards}} cards, {{reviewLogs}} review logs",
+    "seed": "Seed 50,000 words and 200,000 reviews",
+    "wipe": "Delete all data",
+    "benchmark": "Time list and search queries",
+    "working": "Working…",
+    "progress": {
+      "words": "Words: {{done}} of {{total}}",
+      "reviewLogs": "Review logs: {{done}} of {{total}}"
+    },
+    "timing": "Median {{median}} ms, max {{max}} ms, {{rows}} rows"
   }
 }
