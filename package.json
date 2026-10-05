@@ -4,14 +4,17 @@
   "version": "1.0.0",
   "dependencies": {
     "@tanstack/react-query": "^5.104.1",
+    "drizzle-orm": "^0.45.3",
     "expo": "~57.0.26",
     "expo-constants": "~57.0.20",
     "expo-crypto": "~57.0.3",
     "expo-dev-client": "~57.0.19",
+    "expo-file-system": "~57.0.7",
     "expo-linking": "~57.0.11",
     "expo-localization": "~57.0.2",
     "expo-router": "~57.0.24",
     "expo-splash-screen": "~57.0.9",
+    "expo-sqlite": "~57.0.3",
     "expo-status-bar": "~57.0.1",
     "expo-symbols": "~57.0.3",
     "expo-system-ui": "~57.0.4",
@@ -26,8 +29,13 @@
     "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
     "@types/jest": "29.5.14",
     "@types/react": "~19.2.2",
+    "babel-plugin-inline-import": "^3.0.0",
+    "babel-preset-expo": "~57.0.13",
+    "better-sqlite3": "^13.0.3",
+    "drizzle-kit": "^0.31.11",
     "eslint": "^9.39.5",
     "eslint-config-expo": "~57.0.2",
     "jest": "~29.7.0",
@@ -43,7 +51,8 @@
     "format": "prettier --write . && eslint --fix .",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "check": "pnpm lint && pnpm typecheck && pnpm test"
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
+    "db:generate": "drizzle-kit generate"
   },
   "private": true,
   "jest": {

@@ -5,7 +5,14 @@ const expoConfig = require('eslint-config-expo/flat');
 // Import boundaries (docs/02-architecture.md). Flat config replaces a rule's options per file
 // instead of merging them, so each file group below lists every restriction that applies to it.
 const databaseImports = {
-  group: ['drizzle-orm', 'drizzle-orm/*', 'drizzle-kit', 'expo-sqlite', 'expo-sqlite/*'],
+  group: [
+    'drizzle-orm',
+    'drizzle-orm/*',
+    'drizzle-kit',
+    'expo-sqlite',
+    'expo-sqlite/*',
+    'better-sqlite3',
+  ],
   message: 'Only src/data may use the database. Go through a repository.',
 };
 const fsrsImports = {
@@ -39,7 +46,14 @@ const physicalStyleMessage =
 module.exports = defineConfig([
   expoConfig,
   {
-    ignores: ['android/*', 'ios/*', '.expo/*', 'dist/*', 'expo-env.d.ts'],
+    ignores: [
+      'android/*',
+      'ios/*',
+      '.expo/*',
+      'dist/*',
+      'expo-env.d.ts',
+      'src/data/db/migrations/*',
+    ],
   },
   {
     files: ['**/*.{ts,tsx}'],

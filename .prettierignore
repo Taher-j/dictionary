@@ -4,3 +4,4 @@ pnpm-workspace.yaml
 android/
 ios/
 .expo/
+src/data/db/migrations/
