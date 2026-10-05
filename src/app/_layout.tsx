@@ -9,6 +9,11 @@ import { useTranslation } from 'react-i18next';
 import { createQueryClient } from '@/lib/queryClient';
 import { ThemeProvider } from '@/ui/ThemeProvider';
 
+// Deep links such as /add open on top of the tabs, so Back returns to the app.
+export const unstable_settings = {
+  anchor: '(tabs)',
+};
+
 export default function RootLayout() {
   const [queryClient] = useState(createQueryClient);
   const { t } = useTranslation();
