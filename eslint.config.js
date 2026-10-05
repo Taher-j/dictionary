@@ -47,6 +47,24 @@ const physicalStyleKey = '/^(margin|padding)(Left|Right)$|^(left|right)$|^border
 const physicalStyleMessage =
   'Use logical style properties (marginStart, paddingEnd, start, end, ...) instead of left/right.';
 
+const styleSyntaxRules = [
+  { selector: `Property[key.name=${physicalStyleKey}]`, message: physicalStyleMessage },
+  { selector: `Property[key.value=${physicalStyleKey}]`, message: physicalStyleMessage },
+  {
+    selector: "Property[key.name='textAlign'][value.value=/^(left|right)$/]",
+    message: "Use textAlign: 'auto' or 'center'; left/right do not flip for RTL.",
+  },
+];
+
+// On expo-sqlite, a raw db.get(sql`...`) steps once and leaves the statement open, which holds a
+// read transaction and stops WAL checkpoints. Query builders' .get() read all rows and are fine.
+const rawGetRule = {
+  selector:
+    "CallExpression[callee.property.name='get']:matches([arguments.0.tag.name='sql'], [arguments.0.callee.object.name='sql'])",
+  message:
+    'Use db.all(sql`...`) instead of a raw get(): it leaves the statement open on expo-sqlite.',
+};
+
 module.exports = defineConfig([
   expoConfig,
   {
@@ -71,15 +89,7 @@ module.exports = defineConfig([
     rules: {
       // No hard-coded UI strings: every visible string goes through t().
       'react/jsx-no-literals': ['error', { noStrings: true, ignoreProps: true }],
-      'no-restricted-syntax': [
-        'error',
-        { selector: `Property[key.name=${physicalStyleKey}]`, message: physicalStyleMessage },
-        { selector: `Property[key.value=${physicalStyleKey}]`, message: physicalStyleMessage },
-        {
-          selector: "Property[key.name='textAlign'][value.value=/^(left|right)$/]",
-          message: "Use textAlign: 'auto' or 'center'; left/right do not flip for RTL.",
-        },
-      ],
+      'no-restricted-syntax': ['error', ...styleSyntaxRules],
       'no-restricted-imports': restrictImports(databaseImports, fsrsImports, fileSystemImports),
     },
   },
@@ -87,6 +97,7 @@ module.exports = defineConfig([
     files: ['src/data/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-imports': restrictImports(fsrsImports, fileSystemImports),
+      'no-restricted-syntax': ['error', ...styleSyntaxRules, rawGetRule],
     },
   },
   {

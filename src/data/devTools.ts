@@ -15,6 +15,7 @@ import {
 } from '@/data/db/schema';
 import type { Repositories } from '@/data/repositories';
 import type { RepositoryDeps } from '@/data/repositories/deps';
+import { clearSearchIndex, insertIntoSearchIndex } from '@/data/repositories/searchIndex';
 import { CardState, type DictionaryId } from '@/domain/models';
 import { termKeys } from '@/domain/termKeys';
 
@@ -147,8 +148,10 @@ export function createDevTools(
   repositories: Repositories,
   timer: () => number,
 ): DevTools {
+  // Uses all(), not get(): on expo-sqlite a raw get() steps only once and leaves the statement
+  // open, which holds a read transaction and stops WAL checkpoints.
   const tableCount = (name: string) =>
-    db.get<{ n: number }>(sql.raw(`SELECT count(*) AS n FROM ${name}`)).n;
+    db.all<{ n: number }>(sql.raw(`SELECT count(*) AS n FROM ${name}`))[0]?.n ?? 0;
 
   async function findSeedDictionary(): Promise<DictionaryId | null> {
     const list = await repositories.dictionaries.list();
@@ -213,6 +216,16 @@ export function createDevTools(
         db.transaction((tx) => {
           insertInStatements(wordRows, (part) => tx.insert(words).values(part).run());
           insertInStatements(cardRows, (part) => tx.insert(cards).values(part).run());
+          insertInStatements(wordRows, (part) =>
+            insertIntoSearchIndex(
+              tx,
+              part.map((w) => ({
+                id: w.id,
+                translation: w.translation ?? null,
+                definition: w.definition ?? null,
+              })),
+            ),
+          );
         });
         onProgress?.({ phase: 'words', done: done + size, total: options.words });
         await yieldToUi();
@@ -244,6 +257,7 @@ export function createDevTools(
 
     async wipe() {
       db.transaction((tx) => {
+        clearSearchIndex(tx);
         // Children before parents (foreign keys are on).
         for (const table of [
           reviewLogs,
@@ -290,6 +304,14 @@ export function createDevTools(
         {
           name: 'search "mountain" (in translations)',
           run: async () => (await repositories.words.search('mountain', { dictionaryId })).length,
+        },
+        {
+          name: 'search "mountain", all dictionaries',
+          run: async () => (await repositories.words.search('mountain')).length,
+        },
+        {
+          name: 'search prefix "ka", all dictionaries',
+          run: async () => (await repositories.words.search('ka')).length,
         },
         {
           name: 'search with no match',

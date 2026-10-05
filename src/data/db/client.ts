@@ -35,6 +35,8 @@ export async function openAppDatabase(snapshots: SnapshotTarget): Promise<Opened
   const sqlite = openDatabaseSync(DATABASE_NAME);
   sqlite.execSync('PRAGMA journal_mode = WAL;');
   sqlite.execSync('PRAGMA foreign_keys = ON;');
+  // After a checkpoint, shrink the WAL file back to at most 32 MB (bulk writes can grow it).
+  sqlite.execSync('PRAGMA journal_size_limit = 33554432;');
 
   const query = <T>(source: string) => sqlite.getAllSync<T>(source);
   if (needsPreMigrationSnapshot(query, migrations.journal)) {
