@@ -53,3 +53,11 @@ name can still change freely afterwards.
 | 2026-10-05 | Minimum OS versions: the Expo SDK defaults | Owner |
 | 2026-10-05 | Android is the owner's daily phone and the primary test platform | Owner |
 | 2026-10-05 | Package manager: pnpm | Owner: matches other projects |
+| 2026-10-05 | Expo SDK 57.0.26 (stable `latest` at scaffold time) | Milestone 0 |
+| 2026-10-05 | `expo-crypto` supplies UUIDv7 random bytes | Owner: SDK 57/Hermes has no global `crypto.getRandomValues` |
+| 2026-10-05 | ESLint stays on 9.x | `eslint-plugin-react` 7.37 (used by `eslint-config-expo`) crashes on ESLint 10 |
+| 2026-10-05 | pnpm isolated installs (no `nodeLinker: hoisted`); `unrs-resolver` build script denied in `pnpm-workspace.yaml` | Expo supports isolated installs since SDK 54; the resolver's native binding comes from an optional dependency |
+| 2026-10-05 | JS tabs (`expo-router/js-tabs`), not native tabs; [+] is a tab whose press is intercepted to open `/add` | A centre action button that opens a modal needs a custom tab press |
+| 2026-10-05 | Tab icons from `expo-symbols` (shipped with the template) | No extra icon dependency |
+| 2026-10-05 | Platforms: Android and iOS only; web support and `react-native-web` removed | Mobile app; web is not a target |
+| 2026-10-05 | Theme follows the system until the `settings` table exists (Milestone 1+) | No database in Milestone 0 |

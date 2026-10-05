@@ -67,6 +67,7 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm check           # lint + typecheck + test; must pass before a task is "done"
+pnpm format          # prettier --write + eslint --fix
 pnpm expo install <pkg>   # add an Expo package at the version matching the SDK
 ```
 

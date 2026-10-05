@@ -21,6 +21,8 @@
 | Share target (M9) | `expo-sharing` config plugin (receive side) | Android intent filter + iOS share extension. |
 | i18n | `i18next`, `react-i18next`, `expo-localization` | English only for now; architecture ready for more. |
 | Charts (M8) | `react-native-svg`, hand-drawn | No chart library. |
+| Ids | `expo-crypto` (`getRandomBytes`) | Random bits for UUIDv7, wrapped in `src/services/random.ts`. The id format itself is in `src/lib/ids.ts`. |
+| Icons | `expo-symbols` | SF Symbols on iOS, Material Symbols on Android. No icon font package. |
 | Tests | Jest (domain + repositories), Maestro (E2E, from M10) | Repository tests run in Node with `better-sqlite3` and the same Drizzle schema. |
 
 Package manager is pnpm. Install Expo packages with `pnpm expo install <pkg>` so versions match the SDK.
@@ -52,6 +54,7 @@ src/
       _layout.tsx              # Today, Library, [+], Stats, Settings
       index.tsx                # Today
       library/index.tsx        # dictionaries + global search
+      quick-add.tsx            # backs the [+] tab button; its press opens /add (redirects if reached)
       stats.tsx
       settings.tsx
     dictionary/[id].tsx
@@ -87,10 +90,10 @@ src/
     repositories/              # one interface + one SQLite implementation per aggregate
     RepositoriesProvider.tsx
     queryKeys.ts
-  services/                    # files.ts, haptics.ts, speech.ts, notifications.ts
+  services/                    # random.ts, files.ts, haptics.ts, speech.ts, notifications.ts
   ui/                          # tokens.ts, theme.ts, Screen, Text, Button, Chip, Sheet, ListRow
   i18n/                        # index.ts, locales/en.json
-  lib/                         # ids.ts (uuidv7), clock.ts, result.ts
+  lib/                         # ids.ts (uuidv7), clock.ts, queryClient.ts, result.ts
 ```
 
 ## Patterns
@@ -221,7 +224,8 @@ plus one renderer component; the queue, scheduler and summary do not change.
 | Analytics | Nothing | Any wrapper, even a no-op |
 | Public release | Final bundle id and app name early; versioned backups; migration tests; licence check | Store assets |
 
-Lint rules to set up in Milestone 0:
+Lint rules to set up in Milestone 0 (implemented in `eslint.config.js` with built-in rules:
+`react/jsx-no-literals`, `no-restricted-syntax`, `no-restricted-imports`):
 
 - no hard-coded UI strings in JSX
 - no `marginLeft/Right`, `paddingLeft/Right`, `left/right`, `textAlign: 'left' | 'right'` in styles

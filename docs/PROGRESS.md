@@ -7,7 +7,7 @@ and add one line to the session log.
 
 | Milestone | Status |
 | --- | --- |
-| 0 — Project setup | Not started |
+| 0 — Project setup | Done (iOS unverified) |
 | 1 — Data layer | Not started |
 | 2 — Dictionaries and words | Not started |
 | 4 — Review core | Not started |
@@ -22,7 +22,7 @@ and add one line to the session log.
 
 (Rows are in build order: 4 comes before 3.)
 
-## Current milestone: 0 — Project setup
+## Current milestone: 0 — Project setup (done; next is Milestone 1, start with a task plan)
 
 ### Answers for this milestone (nothing is blocking)
 
@@ -34,34 +34,38 @@ and add one line to the session log.
 
 ### Tasks
 
-- [ ] Scaffold Expo project with pnpm (SDK 57+), remove template leftovers
-- [ ] `src/app` routes, `@/` alias, TypeScript strict
-- [ ] ESLint + Prettier + custom lint rules (literal strings, left/right props, import boundaries)
-- [ ] Jest with one real test
-- [ ] `package.json` scripts incl. `check`
-- [ ] App config: name, scheme, bundle ids; `expo-dev-client`; CNG with `android/` `ios/` ignored
-- [ ] `src/ui`: tokens, themes, `Screen`, `Text`, `Button`
-- [ ] `src/i18n` with `en.json`
-- [ ] Root layout providers
-- [ ] Tabs + `/add` placeholder showing the `term` param
-- [ ] `src/lib/ids.ts`, `src/lib/clock.ts`
-- [ ] git init, README, first commit
+- [x] Scaffold Expo project with pnpm (SDK 57+), remove template leftovers
+- [x] `src/app` routes, `@/` alias, TypeScript strict
+- [x] ESLint + Prettier + custom lint rules (literal strings, left/right props, import boundaries)
+- [x] Jest with one real test
+- [x] `package.json` scripts incl. `check`
+- [x] App config: name, scheme, bundle ids; `expo-dev-client`; CNG with `android/` `ios/` ignored
+- [x] `src/ui`: tokens, themes, `Screen`, `Text`, `Button`
+- [x] `src/i18n` with `en.json`
+- [x] Root layout providers
+- [x] Tabs + `/add` placeholder showing the `term` param
+- [x] `src/lib/ids.ts`, `src/lib/clock.ts`
+- [x] git init, README, first commit
 
 ### Done-when checks
 
-- [ ] `pnpm check` passes
-- [ ] Dev build runs on the owner's Android phone (iOS if a Mac is available)
-- [ ] Tabs render in light and dark
-- [ ] `<scheme>://add?term=hello` opens the placeholder with "hello"
-- [ ] Lint fails on a literal JSX string, `marginLeft`, and a `react` import under `src/domain`
-- [ ] No template leftovers
+- [x] `pnpm check` passes
+- [x] Dev build runs on the owner's Android phone (Galaxy S24 Ultra, local `pnpm android`). iOS: not verified (no Mac)
+- [x] Tabs render in light and dark
+- [x] `<scheme>://add?term=hello` opens the placeholder with "hello"
+- [x] Lint fails on a literal JSX string, `marginLeft`, and a `react` import under `src/domain`
+- [x] No template leftovers
 
 ## Verified on device only (owner to confirm)
 
-- (nothing yet)
+- M0, checked by Claude over adb on the S24 Ultra on 2026-10-05: tabs in dark and light, [+] opens
+  quick add, `dictionaryapp://add?term=hello` shows "hello" while the app is running, Back from it
+  returns to the tabs. A cold-start deep link only reaches the dev-client launcher (dev-build
+  behaviour; recheck with a release build later).
+- iOS build: not verified, needs a Mac.
 
 ## Session log
 
 | Date | What was done | Next |
 | --- | --- | --- |
-| | | |
+| 2026-10-05 | Milestone 0: scaffold (SDK 57.0.26), tooling, lint rules, ui kit, i18n, tab shell, dev build on Android | Milestone 1 — Data layer (plan first) |
