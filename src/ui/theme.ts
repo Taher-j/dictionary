@@ -9,6 +9,15 @@ export interface ThemeColors {
   primary: string;
   onPrimary: string;
   danger: string;
+  /** Status dot colours. Status is always shown with text too, never by colour alone. */
+  statusIncomplete: string;
+  statusNew: string;
+  statusLearning: string;
+  statusYoung: string;
+  statusMature: string;
+  statusSuspended: string;
+  /** Translucent layer behind sheets and dialogs. */
+  backdrop: string;
 }
 
 export interface AppTheme {
@@ -27,6 +36,13 @@ export const lightTheme: AppTheme = {
     primary: palette.blue700,
     onPrimary: palette.white,
     danger: palette.red700,
+    statusIncomplete: palette.gray400,
+    statusNew: palette.blue700,
+    statusLearning: palette.amber600,
+    statusYoung: palette.green600,
+    statusMature: palette.green800,
+    statusSuspended: palette.gray600,
+    backdrop: 'rgba(0, 0, 0, 0.4)',
   },
 };
 
@@ -41,5 +57,12 @@ export const darkTheme: AppTheme = {
     primary: palette.blue300,
     onPrimary: palette.gray950,
     danger: palette.red300,
+    statusIncomplete: palette.gray600,
+    statusNew: palette.blue300,
+    statusLearning: palette.amber300,
+    statusYoung: palette.green300,
+    statusMature: palette.green500,
+    statusSuspended: palette.gray400,
+    backdrop: 'rgba(0, 0, 0, 0.6)',
   },
 };

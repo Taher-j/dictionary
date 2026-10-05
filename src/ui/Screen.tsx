@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { Text } from '@/ui/Text';
@@ -12,33 +12,53 @@ export interface ScreenProps {
   /** Screen heading, announced as a header to screen readers. */
   title?: string;
   children: ReactNode;
-  /** Pinned below the content, inside the bottom safe area (actions, banners). */
+  /** Pinned below the content, inside the bottom safe area; stays above the keyboard. */
   footer?: ReactNode;
-  /** Content scrolls by default so large font sizes never truncate it. */
+  /** Content scrolls by default so large font sizes never truncate it. Lists pass false. */
   scroll?: boolean;
+  /** Content padding; lists that draw edge to edge pass false. */
+  padded?: boolean;
+  /** Screens under a navigation header leave out 'top'. */
   edges?: readonly Edge[];
 }
 
 /** Every screen is wrapped in Screen. It owns the safe areas; no screen assumes the bottom edge. */
-export function Screen({ title, children, footer, scroll = true, edges = ALL_EDGES }: ScreenProps) {
+export function Screen({
+  title,
+  children,
+  footer,
+  scroll = true,
+  padded = true,
+  edges = ALL_EDGES,
+}: ScreenProps) {
   const { colors } = useTheme();
+  const contentStyle = [padded && styles.padded, styles.gap];
   const body = (
     <>
-      {title ? <Text variant="title">{title}</Text> : null}
+      {title ? (
+        <View style={!padded && styles.titleOnly}>
+          <Text variant="title">{title}</Text>
+        </View>
+      ) : null}
       {children}
     </>
   );
 
   return (
     <SafeAreaView edges={edges} style={[styles.root, { backgroundColor: colors.background }]}>
-      {scroll ? (
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          {body}
-        </ScrollView>
-      ) : (
-        <View style={[styles.root, styles.content]}>{body}</View>
-      )}
-      {footer ? <View style={styles.footer}>{footer}</View> : null}
+      <KeyboardAvoidingView
+        style={styles.root}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        {scroll ? (
+          <ScrollView contentContainerStyle={contentStyle} keyboardShouldPersistTaps="handled">
+            {body}
+          </ScrollView>
+        ) : (
+          <View style={[styles.root, ...contentStyle]}>{body}</View>
+        )}
+        {footer ? <View style={styles.footer}>{footer}</View> : null}
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -47,12 +67,19 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
   },
-  content: {
+  padded: {
     padding: spacing.md,
+  },
+  gap: {
     gap: spacing.md,
+  },
+  titleOnly: {
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
   },
   footer: {
     paddingHorizontal: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingVertical: spacing.sm,
+    gap: spacing.sm,
   },
 });

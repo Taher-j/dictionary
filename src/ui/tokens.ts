@@ -15,6 +15,12 @@ export const palette = {
   blue300: '#93C5FD',
   blue700: '#1D4ED8',
   red300: '#FCA5A5',
+  amber300: '#FCD34D',
+  amber600: '#D97706',
+  green300: '#86EFAC',
+  green500: '#22C55E',
+  green600: '#16A34A',
+  green800: '#166534',
   red700: '#B91C1C',
 } as const;
 
@@ -38,6 +44,7 @@ export const typography = {
   heading: { fontSize: 20, lineHeight: 26, fontWeight: '600' },
   body: { fontSize: 16, lineHeight: 22, fontWeight: '400' },
   label: { fontSize: 16, lineHeight: 20, fontWeight: '600' },
+  meaning: { fontSize: 22, lineHeight: 28, fontWeight: '400' },
   caption: { fontSize: 13, lineHeight: 18, fontWeight: '400' },
 } as const;
 
