@@ -8,7 +8,6 @@ Append new decisions at the bottom of the log with a date. Do not rewrite histor
 | --- | --- | --- |
 | Q1 | Final app name. Placeholder in use (see below). The display name can change at any time. | Milestone 11 at the latest |
 | Q2 | Final Android package / iOS bundle identifier and URL scheme. Placeholders in use (see below). | **Before Milestone 5** |
-| Q6 | `LIKE` search or FTS5 | Milestone 1, decided by measurement |
 
 ## Placeholders in use
 
@@ -61,3 +60,15 @@ name can still change freely afterwards.
 | 2026-10-05 | Tab icons from `expo-symbols` (shipped with the template) | No extra icon dependency |
 | 2026-10-05 | Platforms: Android and iOS only; web support and `react-native-web` removed | Mobile app; web is not a target |
 | 2026-10-05 | Theme follows the system until the `settings` table exists (Milestone 1+) | No database in Milestone 0 |
+| 2026-10-05 | Q6: FTS5 for meanings. Standalone `words_fts` (trigram, `remove_diacritics 1`); terms stay prefix-matched on a new `(term_fold, id)` index | `LIKE` search took 100-140 ms with 50,000 words on the owner's phone (S24 Ultra); with FTS5 every search is under 20 ms, lists under 5 ms |
+| 2026-10-05 | Searches shorter than three characters match terms only | The trigram index needs three characters; one- and two-letter matches inside meanings are noise |
+| 2026-10-05 | Snapshots are written with `VACUUM INTO` instead of copying the file after a checkpoint | Owner: one statement, consistent copy including the WAL |
+| 2026-10-05 | `.sql` migrations bundled with `babel-plugin-inline-import` (+ `babel-preset-expo` as a dev dependency so the Babel config resolves under pnpm) | Owner: Drizzle's documented Expo setup |
+| 2026-10-05 | Drizzle stable (`drizzle-orm` 0.45, `drizzle-kit` 0.31), not the 1.0 release candidate their Expo page installs | Stable release; same APIs used |
+| 2026-10-05 | `word_tags` without `WITHOUT ROWID` | drizzle-kit cannot express it; hand-editing the migration would drift from its snapshot |
+| 2026-10-05 | No `elapsed_days` column on `cards` | Deprecated in ts-fsrs 5.x (removed in 6.0); derivable from `last_review`. Other columns match ts-fsrs 5.4.2 `Card` |
+| 2026-10-05 | Re-adding a meaning resumes a card that was suspended because its meaning was removed | Otherwise the word could never be reviewed again before suspend UI exists. Revisit when user suspend arrives (it must not be undone by an edit) |
+| 2026-10-05 | Soft-deleting a dictionary soft-deletes its words with the same timestamp; restoring it restores exactly those words | Words deleted earlier stay in the trash |
+| 2026-10-05 | `PRAGMA journal_size_limit = 32 MB` | Bulk writes can leave a large WAL file behind |
+| 2026-10-05 | `better-sqlite3` and `esbuild` build scripts allowed in `pnpm-workspace.yaml` | Needed for repository tests and drizzle-kit |
+| 2026-10-05 | 03-data-model.md: "Eight tables" corrected to nine | Owner |

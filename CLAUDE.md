@@ -68,6 +68,7 @@ pnpm typecheck
 pnpm test
 pnpm check           # lint + typecheck + test; must pass before a task is "done"
 pnpm format          # prettier --write + eslint --fix
+pnpm db:generate     # drizzle-kit: new migration from src/data/db/schema.ts (add --name <name>)
 pnpm expo install <pkg>   # add an Expo package at the version matching the SDK
 ```
 

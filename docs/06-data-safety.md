@@ -11,7 +11,8 @@ code. Three layers protect the data; none needs a server.
 
 ## Snapshots
 
-- Copy the database file into `snapshots/` (inside app storage) after a WAL checkpoint.
+- Write the snapshot with `VACUUM INTO 'snapshots/<file>'` (inside app storage): one statement,
+  a consistent copy that includes the WAL, no separate checkpoint step.
 - When: first launch of each study day; before every migration, import and restore.
 - Keep the newest five; delete older ones.
 - Settings lists snapshots with date and size and can restore one (after confirming).

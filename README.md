@@ -23,6 +23,15 @@ pnpm check       # lint + typecheck + tests; must pass before anything is "done"
 pnpm format      # apply Prettier and ESLint fixes
 ```
 
+Typed routes come from `.expo/types`, which `pnpm start` (or `pnpm android`) generates. After
+adding or renaming a route, start Metro once before `pnpm typecheck`.
+
+## Database
+
+Schema: `src/data/db/schema.ts`. After changing it, run `pnpm db:generate --name <change>` and
+commit the new migration. Never edit a committed migration. Development builds have Settings →
+Developer tools to seed 50,000 words and time list and search queries.
+
 ## Docs
 
 Start with `CLAUDE.md` and `docs/PROGRESS.md`. The specification lives in `docs/`.

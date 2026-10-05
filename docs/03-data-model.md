@@ -1,6 +1,6 @@
 # Data model
 
-Eight tables. Words hold content, cards hold scheduling state, and the review log is the permanent
+Nine tables (eight plus the `word_tags` join table), and the `words_fts` search index. Words hold content, cards hold scheduling state, and the review log is the permanent
 record that all statistics are computed from. There is no statistics table.
 
 Implement this in Drizzle (`src/data/db/schema.ts`). The SQL below is the reference for names,
@@ -68,6 +68,7 @@ CREATE TABLE words (
 CREATE INDEX words_dict_norm    ON words (dictionary_id, term_norm);
 CREATE INDEX words_dict_fold    ON words (dictionary_id, term_fold, id);
 CREATE INDEX words_dict_created ON words (dictionary_id, created_at DESC);
+CREATE INDEX words_fold         ON words (term_fold, id);  -- prefix search across dictionaries
 
 CREATE TABLE tags (
   id         TEXT PRIMARY KEY,
@@ -82,7 +83,7 @@ CREATE TABLE word_tags (
   word_id TEXT NOT NULL REFERENCES words(id),
   tag_id  TEXT NOT NULL REFERENCES tags(id),
   PRIMARY KEY (word_id, tag_id)
-) WITHOUT ROWID;
+);  -- WITHOUT ROWID dropped: drizzle-kit cannot express it (see 08-decisions.md)
 CREATE INDEX word_tags_tag ON word_tags (tag_id);
 
 CREATE TABLE cards (
@@ -152,7 +153,8 @@ library and record the change in `08-decisions.md`.
 - A word with no translation and no definition is **incomplete** and has **no card**.
 - When a word first gets a meaning, create its `recognition` card with `state = 0` and
   `due = now`, in the same transaction.
-- If the meaning is later removed, suspend the card; do not delete it.
+- If the meaning is later removed, suspend the card; do not delete it. If a meaning is added
+  again, the card is resumed (unsuspended) with its schedule unchanged.
 - `recall` cards are created only when the dictionary has `both_directions = 1` (V1).
 - Soft-deleting a word hides its cards from every queue. Restoring the word brings them back unchanged.
 
@@ -199,11 +201,26 @@ sample, a Japanese sample, and full-width Latin characters (NFKC).
 
 ## Search, sorting, paging
 
-- **MVP search**: prefix match on indexed `term_fold`, plus `LIKE '%q%'` on `translation` and
-  `definition`. All behind `WordRepository.search()`.
-- **Measure in Milestone 1** with 50,000 seeded words on a real phone. If a search exceeds 100 ms,
-  add a **standalone** FTS5 table keyed by word id (trigram tokenizer), maintained by the
-  repository in the same transaction as the word write.
+- **Search** (decided in Milestone 1 by measurement, Q6): terms match by prefix on indexed
+  `term_fold`; translations and definitions match anywhere through a **standalone** FTS5 table,
+  maintained by the repository in the same transaction as the word write. All behind
+  `WordRepository.search()`. With 50,000 words, `LIKE` took 100-140 ms on the owner's phone;
+  FTS5 brought every search under 20 ms.
+
+  ```sql
+  CREATE VIRTUAL TABLE words_fts USING fts5(
+    word_id, translation, definition,
+    tokenize = 'trigram remove_diacritics 1'
+  );
+  ```
+
+  - One row per word with a translation or definition. `word_id` is indexed too, so one word's
+    row is found by `MATCH 'word_id : "<id>"'` instead of a full scan.
+  - Meaning matches are case- and accent-insensitive. The trigram index needs three characters,
+    so shorter queries match terms only.
+  - Query shape: candidate ids (term prefix `UNION ALL` FTS matches) drive the query, then
+    deleted words and other dictionaries are filtered out. Starting from the dictionary index
+    instead scans the whole dictionary.
 - **Do not use an external-content FTS table.** `words` has a text primary key, so its implicit
   rowid can be renumbered by `VACUUM`, which would corrupt an external-content index.
 - **Sort A-Z by `term_fold`** (places "ä" next to "a" without ICU collation).
