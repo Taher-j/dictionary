@@ -67,6 +67,8 @@ export const words = sqliteTable(
     // No unique constraint on term_norm: homonyms are legitimate.
     index('words_dict_norm').on(t.dictionaryId, t.termNorm),
     index('words_dict_fold').on(t.dictionaryId, t.termFold, t.id),
+    // Prefix search across all dictionaries (Q6 measurement, docs/08-decisions.md).
+    index('words_fold').on(t.termFold, t.id),
     index('words_dict_created').on(t.dictionaryId, sql`${t.createdAt} DESC`),
   ],
 );
@@ -150,6 +152,9 @@ export const reviewLogs = sqliteTable(
     index('review_logs_time').on(t.reviewedAt),
   ],
 );
+
+// words_fts (FTS5, trigram) is created by a hand-written migration; drizzle cannot model virtual
+// tables. It is maintained in src/data/repositories/searchIndex.ts.
 
 export const settings = sqliteTable('settings', {
   key: text('key').primaryKey(),

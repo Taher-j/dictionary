@@ -1,6 +1,7 @@
 /** @jest-environment node */
 import journal from '@/data/db/migrations/meta/_journal.json';
-import { createTestContext } from '@/data/testing/testDatabase';
+import { createTestContext, MIGRATIONS_FOLDER } from '@/data/testing/testDatabase';
+import Database from 'better-sqlite3';
 
 const columnsOf = (ctx: ReturnType<typeof createTestContext>, table: string) =>
   (ctx.sqlite.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map(
@@ -29,6 +30,12 @@ describe('migrations', () => {
       'tags',
       'word_tags',
       'words',
+      'words_fts',
+      'words_fts_config',
+      'words_fts_content',
+      'words_fts_data',
+      'words_fts_docsize',
+      'words_fts_idx',
     ]);
     const applied = ctx.sqlite.prepare('SELECT count(*) AS n FROM __drizzle_migrations').get();
     expect(applied).toEqual({ n: journal.entries.length });
@@ -57,6 +64,31 @@ describe('migrations', () => {
       ).map((c) => c.name);
       expect(cols).not.toContain('term_norm');
     }
+  });
+
+  it('backfills the search index for a database created before it existed', () => {
+    const fs = jest.requireActual<typeof import('node:fs')>('node:fs');
+    const path = jest.requireActual<typeof import('node:path')>('node:path');
+    const apply = (sqlite: Database.Database, tag: string) => {
+      const source = fs.readFileSync(path.join(MIGRATIONS_FOLDER, `${tag}.sql`), 'utf8');
+      for (const statement of source.split('--> statement-breakpoint')) sqlite.exec(statement);
+    };
+    const tags = journal.entries.map((e) => e.tag);
+    const ftsIndex = tags.findIndex((tag) => tag.endsWith('_words_fts'));
+
+    const sqlite = new Database(':memory:');
+    tags.slice(0, ftsIndex).forEach((tag) => apply(sqlite, tag));
+    sqlite.exec(`
+      INSERT INTO dictionaries (id, name, created_at, updated_at) VALUES ('d', 'German', 1, 1);
+      INSERT INTO words (id, dictionary_id, term, term_norm, term_fold, translation, created_at, updated_at)
+        VALUES ('w1', 'd', 'Haus', 'haus', 'haus', 'house', 1, 1),
+               ('w2', 'd', 'Baum', 'baum', 'baum', NULL, 1, 1);
+    `);
+    tags.slice(ftsIndex).forEach((tag) => apply(sqlite, tag));
+
+    expect(sqlite.prepare('SELECT word_id, translation FROM words_fts').all()).toEqual([
+      { word_id: 'w1', translation: 'house' },
+    ]);
   });
 
   it('enforces foreign keys', () => {

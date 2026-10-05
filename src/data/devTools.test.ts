@@ -46,7 +46,7 @@ describe('devTools', () => {
     expect(page.items).toHaveLength(50);
 
     const results = await devTools.benchmark(3);
-    expect(results.map((r) => r.name)).toHaveLength(6);
+    expect(results.map((r) => r.name)).toHaveLength(8);
     expect(results[0]?.rows).toBe(50);
 
     await devTools.wipe();

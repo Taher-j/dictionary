@@ -237,8 +237,12 @@ describe('WordRepository.search', () => {
     });
     await repos.words.create({ dictionaryId: de.id, term: 'Haus' });
 
+    // Same fold: ties break on id (creation order). Meanings match case- and accent-insensitively.
     const results = await repos.words.search('SCHO');
-    expect(results.map((w) => w.term)).toEqual(['Schön', 'schon']); // same fold: ties break on id (creation order)
+    expect(results.map((w) => w.term)).toEqual(['Schön', 'schon', 'hübsch', 'nice']);
+
+    const shortQuery = await repos.words.search('sc');
+    expect(shortQuery.map((w) => w.term)).toEqual(['Schön', 'schon']);
 
     const withMeanings = await repos.words.search('schön');
     expect(withMeanings.map((w) => w.term)).toEqual(['Schön', 'schon', 'hübsch', 'nice']);
@@ -247,15 +251,45 @@ describe('WordRepository.search', () => {
     expect(inGerman.map((w) => w.term)).toEqual(['Schön', 'schon', 'hübsch']);
   });
 
-  it('treats LIKE wildcards literally and returns nothing for blank text', async () => {
+  it('treats wildcards and FTS syntax in the query as plain text', async () => {
     const { repos, de } = await setup();
     await repos.words.create({ dictionaryId: de.id, term: 'Prozent', translation: '100% sure' });
     await repos.words.create({ dictionaryId: de.id, term: 'other', translation: 'snake_case' });
+    await repos.words.create({
+      dictionaryId: de.id,
+      term: 'quote',
+      translation: 'say "hi" OR NOT',
+    });
     await repos.words.create({ dictionaryId: de.id, term: 'plain', translation: 'nothing here' });
 
-    expect((await repos.words.search('%')).map((w) => w.term)).toEqual(['Prozent']);
-    expect((await repos.words.search('_')).map((w) => w.term)).toEqual(['other']);
+    expect((await repos.words.search('0% s')).map((w) => w.term)).toEqual(['Prozent']);
+    expect((await repos.words.search('e_c')).map((w) => w.term)).toEqual(['other']);
+    expect((await repos.words.search('"hi" OR')).map((w) => w.term)).toEqual(['quote']);
+    expect((await repos.words.search('NOT *')).map((w) => w.term)).toEqual([]);
     expect(await repos.words.search('   ')).toEqual([]);
+  });
+
+  it('keeps the meaning index in step with edits and deletes', async () => {
+    const { repos, de } = await setup();
+    const word = await repos.words.create({
+      dictionaryId: de.id,
+      term: 'Haus',
+      translation: 'house',
+    });
+    await repos.words.create({ dictionaryId: de.id, term: 'Hütte', translation: 'small house' });
+
+    await repos.words.update(word.id, { translation: 'home', definition: 'where you live' });
+    expect((await repos.words.search('house')).map((w) => w.term)).toEqual(['Hütte']);
+    expect((await repos.words.search('you liv')).map((w) => w.term)).toEqual(['Haus']);
+
+    await repos.words.update(word.id, { translation: null, definition: null });
+    expect(await repos.words.search('home')).toEqual([]);
+
+    await repos.words.update(word.id, { translation: 'home again' });
+    await repos.words.softDelete([word.id]);
+    expect(await repos.words.search('home')).toEqual([]);
+    await repos.words.restore([word.id]);
+    expect((await repos.words.search('home')).map((w) => w.term)).toEqual(['Haus']);
   });
 });
 

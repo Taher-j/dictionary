@@ -2,6 +2,12 @@ import { and, asc, desc, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-
 
 import { cards, words } from '@/data/db/schema';
 import { chunk, type RepositoryDeps } from '@/data/repositories/deps';
+import {
+  insertIntoSearchIndex,
+  meaningMatch,
+  MIN_FTS_QUERY_LENGTH,
+  updateSearchIndex,
+} from '@/data/repositories/searchIndex';
 import { duplicateTier } from '@/domain/duplicates';
 import {
   CardState,
@@ -95,11 +101,6 @@ function toListItem(row: ListRow): WordListItem {
     createdAt: row.createdAt,
     status: wordStatus(card),
   };
-}
-
-/** Escapes LIKE wildcards; use with `ESCAPE '\'`. */
-function likeContains(text: string): string {
-  return `%${text.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
 }
 
 /** Upper bound for a prefix range on a BINARY-collated column. */
@@ -226,20 +227,28 @@ export function createWordRepository({ db, now, newId }: RepositoryDeps): WordRe
       const trimmed = text.trim();
       if (trimmed === '') return [];
       const { fold } = termKeys(trimmed);
-      const like = likeContains(trimmed.toLowerCase());
       const prefix = and(
         sql`${words.termFold} >= ${fold}`,
         sql`${words.termFold} < ${fold + PREFIX_END}`,
       );
-      const conditions: (SQL | undefined)[] = [
-        isNull(words.deletedAt),
-        or(
-          prefix,
-          sql`${words.translation} LIKE ${like} ESCAPE '\\'`,
-          sql`${words.definition} LIKE ${like} ESCAPE '\\'`,
-        ),
-      ];
-      if (query?.dictionaryId) conditions.push(eq(words.dictionaryId, query.dictionaryId));
+      // Terms match by prefix (B-tree index). Translations and definitions match anywhere, through
+      // the FTS5 trigram index, which needs at least three characters. For longer queries the
+      // candidate ids drive the query; the unary + keeps SQLite from scanning a whole dictionary
+      // through its index and testing every row (measured on a phone, Q6).
+      const useFts = [...trimmed].length >= MIN_FTS_QUERY_LENGTH;
+      const conditions: (SQL | undefined)[] = [isNull(words.deletedAt)];
+      if (useFts) {
+        conditions.push(sql`${words.id} IN (
+          SELECT id FROM words WHERE term_fold >= ${fold} AND term_fold < ${fold + PREFIX_END}
+          UNION ALL
+          SELECT word_id FROM words_fts WHERE words_fts MATCH ${meaningMatch(trimmed)}
+        )`);
+        if (query?.dictionaryId)
+          conditions.push(sql`+${words.dictionaryId} = ${query.dictionaryId}`);
+      } else {
+        conditions.push(prefix);
+        if (query?.dictionaryId) conditions.push(eq(words.dictionaryId, query.dictionaryId));
+      }
 
       const rows = listSelect()
         .where(and(...conditions))
@@ -310,6 +319,7 @@ export function createWordRepository({ db, now, newId }: RepositoryDeps): WordRe
           .returning()
           .get();
         syncRecognitionCard(tx, inserted, at);
+        insertIntoSearchIndex(tx, [inserted]);
         return inserted;
       });
       return toWord(row);
@@ -334,6 +344,7 @@ export function createWordRepository({ db, now, newId }: RepositoryDeps): WordRe
           .get();
         if (!updated) throw new Error(`Word not found: ${id}`);
         syncRecognitionCard(tx, updated, at);
+        if ('translation' in patch || 'definition' in patch) updateSearchIndex(tx, updated);
         return updated;
       });
       return toWord(row);

@@ -1,0 +1,1 @@
+CREATE INDEX `words_fold` ON `words` (`term_fold`,`id`);
