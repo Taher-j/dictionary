@@ -10,7 +10,7 @@ and add one line to the session log.
 | 0 — Project setup | Done (iOS unverified) |
 | 1 — Data layer | Done (iOS unverified) |
 | 2 — Dictionaries and words | Done (iOS unverified) |
-| 4 — Review core | Not started |
+| 4 — Review core | In progress (code done; device checks left) |
 | 3 — Search, tags and filters | Not started |
 | 5 — Backup and restore (MVP gate) | Not started |
 | 6 — Import, export and bulk edits | Not started |
@@ -22,38 +22,50 @@ and add one line to the session log.
 
 (Rows are in build order: 4 comes before 3.)
 
-## Current milestone: 2 — Dictionaries and words (done; next is Milestone 4, start with a task plan)
+## Current milestone: 4 — Review core (in progress; pick up at "Next steps")
 
-Milestone 1's checklist and phone timings are in git history (`docs/PROGRESS.md` before Milestone 2).
-Milestone 1 timings: every list and search query under 20 ms at 50,000 words with FTS5.
-
-### Decisions
-
-- [x] `expo-haptics`, `expo-clipboard`, `react-native-keyboard-controller` added (owner approved)
-- [x] Reorder with up/down buttons; `/add?context=` prefills Example (see `08-decisions.md`)
+Milestone 2's checklist is in git history (`docs/PROGRESS.md` before Milestone 4). Plan approved on
+2026-10-06 with: no automatic suspend, 10 s per card for the estimate, Suspend in the session menu
+and word detail. Also decided: review cards are due by study day (see `08-decisions.md`).
 
 ### Tasks
 
-- [x] Repositories: Library counts, reorder, Inbox list and count, trash list, purge after 30 days
-      at startup, `lastDictionaryId` setting (66 tests)
-- [x] UI kit: toast (Zustand store, screen-reader announcement), action sheet, text field, chip,
-      icon button, list row, status badge; `services/haptics.ts`, `services/clipboard.ts`
-- [x] Screens: first launch, Library, dictionary (FlashList, A-Z / recent), quick add, word detail,
-      Inbox, Trash
-- [x] Keyboard handling with `react-native-keyboard-controller`
+- [x] `ts-fsrs` 5.4.2; `scheduler.ts`, `studyDay.ts`, `queue.ts` (`buildQueue`), `session.ts`
+      (`sessionReducer`), `intervals.ts`, with tests
+- [x] `ReviewRepository`: queue candidates, Today summary, introduced-today count, due tomorrow,
+      sessions, transactional `answer`, `undoAnswer`; `cards.setSuspendedForWord`
+- [x] Removing a meaning no longer suspends the card; status is "incomplete" without a meaning
+- [x] Today: review card (counts, estimate, Start, "All caught up" + next review), Recently added
+- [x] Review session `/review`: flip (crossfade with reduced motion), ratings with intervals,
+      progress, undo, edit, "I know this"; summary with missed words, due tomorrow, Keep going
+- [x] Settings: new words per day, cards per session; word detail: next review, Suspend/Unsuspend
+- [x] Zustand session store (ids only)
 
 ### Done-when checks
 
-- [x] Add a word from any tab in about five seconds: [+] is in the tab bar on every tab, quick add
-      opens with the term focused, Save closes (checked over adb; owner to confirm by hand)
-- [x] 50,000-word dictionary scrolls without blanks: fling over adb, 746 frames, p99 16 ms,
-      0.5 % janky, no blank rows in screenshots taken mid-fling
-- [x] Duplicate messages: covered by `duplicates.test.ts`; "Already in this dictionary" checked on
-      the phone
-- [x] Delete, restore, purge: repository tests; delete and restore from Trash checked on the phone,
-      the restored word kept its card ("New")
-- [x] Completing an incomplete word creates exactly one recognition card: repository test; on the
-      phone the status changed from "Needs meaning" to "New"
+- [x] All "Required tests" in `04-learning-system.md` pass (`pnpm check`: 97 tests)
+- [x] Killing the app mid-session loses no answered card: answered Good, force-stopped 0.3 s later;
+      card and log row were in the database (adb, 2026-10-06)
+- [ ] A full session with a screen reader: labels checked in the UI dump ("Good, next review in 10
+      minutes", answer read as the meaning); a full TalkBack session needs the owner
+
+### Checked on the phone (dev build, 2026-10-06)
+
+Reveal and flip, rating intervals for a new card (1 min / 6 min / 10 min / 8 d), Again requeues,
+Undo restores the card (state New, reps 0) and deletes the log, summary, Today counts after
+relaunch, "All caught up" with next review time, word detail "Young" + next review date, Suspend
+and Unsuspend from word detail keep the schedule.
+
+### Next steps
+
+1. On the phone: "I know this" from the session menu (the "BaumHundKatze" learning card was due at
+   08:50), and the crossfade with reduced motion (Android: Settings → Accessibility → Remove
+   animations). Not yet checked.
+2. Owner: one full session with TalkBack.
+3. The phone runs the **dev build** with test data (dictionary "Test": Haus, BaumHundKatze).
+   Delete it (Settings → Developer tools → Delete all data), then build and install the release:
+   `cd android && ./gradlew assembleRelease`, `adb install -r app/build/outputs/apk/release/app-release.apk`.
+4. Tick the last done-when check, set Milestone 4 to Done, plan Milestone 3.
 
 ### Known issues
 
@@ -84,3 +96,4 @@ Milestone 1 timings: every list and search query under 20 ms at 50,000 words wit
 | 2026-10-05 | Milestone 0: scaffold (SDK 57.0.26), tooling, lint rules, ui kit, i18n, tab shell, dev build on Android | Milestone 1 — Data layer (plan first) |
 | 2026-10-05 | Milestone 1: schema + 3 migrations, repositories, startup with snapshot, dev tools; Q6 decided (FTS5); fixed WAL growth | Milestone 2 — Dictionaries and words (plan first) |
 | 2026-10-05/06 | Milestone 2: Library, dictionary list, quick add, word detail, Inbox, Trash; keyboard-controller | Milestone 4 — Review core (plan first) |
+| 2026-10-06 | M2 wrap-up (keyboard, sheet fix), release build; M4 domain, data and UI, most phone checks | M4 next steps above, then Milestone 3 |
