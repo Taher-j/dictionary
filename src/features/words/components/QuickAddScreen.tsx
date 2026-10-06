@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { TextInput } from 'react-native';
+import { Keyboard, type TextInput } from 'react-native';
 
 import type { DictionaryId, WordDetails } from '@/domain/models';
 import { useDictionaries } from '@/features/dictionaries/hooks/useDictionaries';
@@ -102,6 +102,7 @@ export function QuickAddScreen({ initialTerm, context, dictionaryId }: QuickAddS
       setShowMore(false);
       termRef.current?.focus();
     } else {
+      Keyboard.dismiss();
       router.back();
     }
   };

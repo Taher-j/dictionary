@@ -6,6 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 
 import { RepositoriesProvider } from '@/data/RepositoriesProvider';
 import { StartupError } from '@/features/startup/StartupError';
@@ -33,32 +34,46 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <StatusBar style="auto" />
-        {startup.status === 'error' ? <StartupError error={startup.error} /> : null}
-        {startup.status === 'ready' ? (
-          <RepositoriesProvider value={startup.services}>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="add" options={{ presentation: 'modal', title: t('add.title') }} />
-              <Stack.Screen
-                name="dictionary/new"
-                options={{ presentation: 'formSheet', sheetAllowedDetents: 'fitToContents' }}
-              />
-              <Stack.Screen
-                name="dictionary/[id]/edit"
-                options={{ presentation: 'formSheet', sheetAllowedDetents: 'fitToContents' }}
-              />
-              <Stack.Screen name="dictionary/[id]" options={{ headerShown: true, title: '' }} />
-              <Stack.Screen name="word/[id]" options={{ headerShown: true, title: '' }} />
-              <Stack.Screen name="inbox" options={{ headerShown: true, title: t('inbox.title') }} />
-              <Stack.Screen name="trash" options={{ headerShown: true, title: t('trash.title') }} />
-              <Stack.Screen name="dev" options={{ presentation: 'modal', title: t('dev.title') }} />
-            </Stack>
-            <ToastHost />
-          </RepositoriesProvider>
-        ) : null}
-      </ThemeProvider>
+      <KeyboardProvider>
+        <ThemeProvider>
+          <StatusBar style="auto" />
+          {startup.status === 'error' ? <StartupError error={startup.error} /> : null}
+          {startup.status === 'ready' ? (
+            <RepositoriesProvider value={startup.services}>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="(tabs)" />
+                <Stack.Screen
+                  name="add"
+                  options={{ presentation: 'modal', title: t('add.title') }}
+                />
+                <Stack.Screen
+                  name="dictionary/new"
+                  options={{ presentation: 'formSheet', sheetAllowedDetents: 'fitToContents' }}
+                />
+                <Stack.Screen
+                  name="dictionary/[id]/edit"
+                  options={{ presentation: 'formSheet', sheetAllowedDetents: 'fitToContents' }}
+                />
+                <Stack.Screen name="dictionary/[id]" options={{ headerShown: true, title: '' }} />
+                <Stack.Screen name="word/[id]" options={{ headerShown: true, title: '' }} />
+                <Stack.Screen
+                  name="inbox"
+                  options={{ headerShown: true, title: t('inbox.title') }}
+                />
+                <Stack.Screen
+                  name="trash"
+                  options={{ headerShown: true, title: t('trash.title') }}
+                />
+                <Stack.Screen
+                  name="dev"
+                  options={{ presentation: 'modal', title: t('dev.title') }}
+                />
+              </Stack>
+              <ToastHost />
+            </RepositoriesProvider>
+          ) : null}
+        </ThemeProvider>
+      </KeyboardProvider>
     </QueryClientProvider>
   );
 }

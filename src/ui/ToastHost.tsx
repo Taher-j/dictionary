@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { AccessibilityInfo, Pressable, StyleSheet, View } from 'react-native';
+import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@/ui/Text';
@@ -27,10 +28,13 @@ export function ToastHost() {
   }, [toast, hide]);
 
   if (!toast) return null;
+  const bottom = insets.bottom + TAB_BAR_CLEARANCE;
   return (
-    <View
+    <KeyboardStickyView
       pointerEvents="box-none"
-      style={[styles.wrap, { bottom: insets.bottom + TAB_BAR_CLEARANCE }]}
+      // With the keyboard open, sit just above it instead of above the tab bar.
+      offset={{ opened: bottom - spacing.sm }}
+      style={[styles.wrap, { bottom }]}
     >
       <View
         accessibilityLiveRegion="polite"
@@ -52,7 +56,7 @@ export function ToastHost() {
           </Pressable>
         ) : null}
       </View>
-    </View>
+    </KeyboardStickyView>
   );
 }
 

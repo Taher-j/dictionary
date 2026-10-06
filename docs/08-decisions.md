@@ -72,3 +72,7 @@ name can still change freely afterwards.
 | 2026-10-05 | `PRAGMA journal_size_limit = 32 MB` | Bulk writes can leave a large WAL file behind |
 | 2026-10-05 | `better-sqlite3` and `esbuild` build scripts allowed in `pnpm-workspace.yaml` | Needed for repository tests and drizzle-kit |
 | 2026-10-05 | 03-data-model.md: "Eight tables" corrected to nine | Owner |
+| 2026-10-05 | `expo-haptics` and `expo-clipboard` added (Milestone 2) | Owner: needed for `services/haptics.ts` and the paste button in quick add |
+| 2026-10-05 | Dictionaries are reordered with up/down buttons in a "Reorder" mode, not drag and drop | Owner: no new dependency; works with screen readers |
+| 2026-10-05 | `/add?context=` prefills the Example field and shows it expanded | Owner: the context is the sentence where the word was found |
+| 2026-10-05 | `react-native-keyboard-controller` for keyboard handling (`KeyboardProvider`, `KeyboardAvoidingView`, `KeyboardAwareScrollView`, `KeyboardStickyView`) | Owner approved it as the fallback; on the S24 Ultra React Native's `KeyboardAvoidingView` left quick add's buttons behind the keyboard (edge-to-edge) |

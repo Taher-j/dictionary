@@ -22,6 +22,9 @@
 | i18n | `i18next`, `react-i18next`, `expo-localization` | English only for now; architecture ready for more. |
 | Charts (M8) | `react-native-svg`, hand-drawn | No chart library. |
 | Ids | `expo-crypto` (`getRandomBytes`) | Random bits for UUIDv7, wrapped in `src/services/random.ts`. The id format itself is in `src/lib/ids.ts`. |
+| Haptics | `expo-haptics` | Wrapped in `src/services/haptics.ts`; respects the haptics setting. |
+| Clipboard | `expo-clipboard` | Paste button in quick add. Wrapped in `src/services/clipboard.ts`. |
+| Keyboard | `react-native-keyboard-controller` | `KeyboardProvider` at the root; used by `Screen` and the toast. React Native's own `KeyboardAvoidingView` misbehaves with Android edge-to-edge. |
 | Icons | `expo-symbols` | SF Symbols on iOS, Material Symbols on Android. No icon font package. |
 | Tests | Jest (domain + repositories), Maestro (E2E, from M10) | Repository tests run in Node with `better-sqlite3` and the same Drizzle schema. |
 

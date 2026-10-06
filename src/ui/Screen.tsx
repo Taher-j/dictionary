@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
 import { Text } from '@/ui/Text';
@@ -46,14 +47,17 @@ export function Screen({
 
   return (
     <SafeAreaView edges={edges} style={[styles.root, { backgroundColor: colors.background }]}>
-      <KeyboardAvoidingView
-        style={styles.root}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      {/* keyboard-controller: React Native's own KeyboardAvoidingView misbehaves with
+          Android edge-to-edge (docs/08-decisions.md). */}
+      <KeyboardAvoidingView style={styles.root} behavior="padding">
         {scroll ? (
-          <ScrollView contentContainerStyle={contentStyle} keyboardShouldPersistTaps="handled">
+          <KeyboardAwareScrollView
+            contentContainerStyle={contentStyle}
+            keyboardShouldPersistTaps="handled"
+            bottomOffset={spacing.lg}
+          >
             {body}
-          </ScrollView>
+          </KeyboardAwareScrollView>
         ) : (
           <View style={[styles.root, ...contentStyle]}>{body}</View>
         )}
