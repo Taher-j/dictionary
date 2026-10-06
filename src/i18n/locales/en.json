@@ -5,7 +5,9 @@
     "delete": "Delete",
     "undo": "Undo",
     "close": "Close",
-    "selectedItem": "{{label}} (current)"
+    "selectedItem": "{{label}} (current)",
+    "decrease": "Decrease {{label}}",
+    "increase": "Increase {{label}}"
   },
   "tabs": {
     "today": "Today",
@@ -38,10 +40,16 @@
     "source": "Source"
   },
   "today": {
-    "reviewComingSoon": "Reviews arrive soon.",
     "inbox_one": "{{count, number}} word needs a meaning",
     "inbox_other": "{{count, number}} words need a meaning",
-    "inboxHint": "Opens the inbox"
+    "inboxHint": "Opens the inbox",
+    "toReview_one": "{{count, number}} to review · about {{minutes, number}} min",
+    "toReview_other": "{{count, number}} to review · about {{minutes, number}} min",
+    "dueAndNew": "{{due, number}} due, {{new, number}} new",
+    "startReview": "Start review",
+    "caughtUp": "All caught up",
+    "nextReview": "Next review: {{when}}",
+    "recentlyAdded": "Recently added"
   },
   "library": {
     "newDictionary": "New dictionary",
@@ -110,7 +118,10 @@
     "added": "Added {{date}}",
     "editField": "{{field}}: {{value}}. Double tap to edit.",
     "empty": "empty",
-    "tapToAdd": "Add {{field}}"
+    "tapToAdd": "Add {{field}}",
+    "nextReview": "Next review: {{date}}",
+    "suspend": "Suspend (I know this)",
+    "unsuspend": "Unsuspend"
   },
   "inbox": {
     "title": "Needs a meaning",
@@ -147,5 +158,68 @@
       "reviewLogs": "Review logs: {{done, number}} of {{total, number}}"
     },
     "timing": "Median {{median}} ms, max {{max}} ms, {{rows, number}} rows"
+  },
+  "review": {
+    "revealHint": "Double tap to reveal the answer",
+    "tapToReveal": "Tap to show the answer",
+    "showAnswer": "Show answer",
+    "rating": {
+      "again": "Again",
+      "hard": "Hard",
+      "good": "Good",
+      "easy": "Easy"
+    },
+    "ratingLabel": "{{rating}}, next review in {{interval}}",
+    "interval": {
+      "minute_one": "{{count, number}} min",
+      "minute_other": "{{count, number}} min",
+      "hour_one": "{{count, number}} h",
+      "hour_other": "{{count, number}} h",
+      "day_one": "{{count, number}} d",
+      "day_other": "{{count, number}} d",
+      "month_one": "{{count, number}} mo",
+      "month_other": "{{count, number}} mo",
+      "year_one": "{{count, number}} y",
+      "year_other": "{{count, number}} y"
+    },
+    "intervalLong": {
+      "minute_one": "{{count, number}} minute",
+      "minute_other": "{{count, number}} minutes",
+      "hour_one": "{{count, number}} hour",
+      "hour_other": "{{count, number}} hours",
+      "day_one": "{{count, number}} day",
+      "day_other": "{{count, number}} days",
+      "month_one": "{{count, number}} month",
+      "month_other": "{{count, number}} months",
+      "year_one": "{{count, number}} year",
+      "year_other": "{{count, number}} years"
+    },
+    "close": "Close review",
+    "undo": "Undo last answer",
+    "edit": "Edit this card",
+    "menu": "More options",
+    "knowThis": "I know this (suspend)",
+    "suspended": "{{term}} is suspended",
+    "progressLabel": "Session progress",
+    "remaining_one": "{{count, number}} left",
+    "remaining_other": "{{count, number}} left",
+    "saveFailed": "Could not save. Try again.",
+    "summary": {
+      "title": "Session done",
+      "done": "Done",
+      "keepGoing_one": "Keep going ({{count, number}} more)",
+      "keepGoing_other": "Keep going ({{count, number}} more)",
+      "reviewed_one": "{{count, number}} card reviewed",
+      "reviewed_other": "{{count, number}} cards reviewed",
+      "goodShare": "{{share}} rated Good or Easy",
+      "dueTomorrow_one": "{{count, number}} card due tomorrow",
+      "dueTomorrow_other": "{{count, number}} cards due tomorrow",
+      "missed": "Missed words",
+      "editHint": "Opens the word to edit it"
+    }
+  },
+  "settings": {
+    "dailyNewLimit": "New words per day",
+    "sessionSize": "Cards per session"
   }
 }

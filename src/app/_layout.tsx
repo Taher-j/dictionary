@@ -43,6 +43,10 @@ export default function RootLayout() {
               <Stack screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="(tabs)" />
                 <Stack.Screen
+                  name="review"
+                  options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
+                />
+                <Stack.Screen
                   name="add"
                   options={{ presentation: 'modal', title: t('add.title') }}
                 />

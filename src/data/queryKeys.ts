@@ -49,3 +49,9 @@ export const settingsKeys = {
   all: ['settings'] as const,
   detail: (key: SettingKey) => [...settingsKeys.all, key] as const,
 };
+
+export const reviewKeys = {
+  all: ['reviews'] as const,
+  today: () => [...reviewKeys.all, 'today'] as const,
+  dueTomorrow: () => [...reviewKeys.all, 'dueTomorrow'] as const,
+};

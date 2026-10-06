@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 
 import type { WordDetails, WordId } from '@/domain/models';
 import { useDictionaries } from '@/features/dictionaries/hooks/useDictionaries';
+import { useSetWordSuspended } from '@/features/review/hooks/useReview';
 import { EditableField } from '@/features/words/components/EditableField';
 import {
   useDeleteWords,
@@ -44,6 +45,7 @@ export function WordDetailScreen({ id }: { id: WordId }) {
   const update = useUpdateWord();
   const remove = useDeleteWords();
   const restore = useRestoreWords();
+  const setSuspended = useSetWordSuspended();
   const [menu, setMenu] = useState<'none' | 'actions' | 'move'>('none');
   const [showEmpty, setShowEmpty] = useState(false);
 
@@ -129,6 +131,14 @@ export function WordDetailScreen({ id }: { id: WordId }) {
 
       <View style={[styles.meta, { borderTopColor: colors.border }]}>
         <StatusBadge status={data.status} />
+        {data.card &&
+        data.status !== 'incomplete' &&
+        data.status !== 'suspended' &&
+        data.status !== 'new' ? (
+          <Text variant="caption" tone="muted">
+            {t('word.nextReview', { date: formatDate(data.card.due, i18n.language) })}
+          </Text>
+        ) : null}
         <Text variant="caption" tone="muted">
           {t('word.added', { date: formatDate(w.createdAt, i18n.language) })}
         </Text>
@@ -140,6 +150,16 @@ export function WordDetailScreen({ id }: { id: WordId }) {
         onClose={() => setMenu('none')}
         actions={[
           { key: 'move', label: t('word.moveTo'), onPress: () => setMenu('move') },
+          ...(data.card
+            ? [
+                {
+                  key: 'suspend',
+                  label: data.card.suspended ? t('word.unsuspend') : t('word.suspend'),
+                  onPress: () =>
+                    setSuspended.mutate({ wordId: id, suspended: !data.card?.suspended }),
+                },
+              ]
+            : []),
           {
             key: 'delete',
             label: t('common.delete'),
