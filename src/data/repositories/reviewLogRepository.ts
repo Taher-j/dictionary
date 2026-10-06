@@ -12,7 +12,10 @@ import type {
   SessionId,
 } from '@/domain/models';
 
-/** Append-only: review logs are never updated or deleted. */
+/**
+ * Append-only: review logs are never updated. The one delete is undo of the last answer, which
+ * lives in ReviewRepository.undoAnswer (docs/04-learning-system.md).
+ */
 export interface ReviewLogRepository {
   append(input: NewReviewLog): Promise<ReviewLog>;
   listForCard(cardId: CardId): Promise<ReviewLog[]>;

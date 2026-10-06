@@ -8,10 +8,15 @@ export function hasMeaning(word: Pick<WordDetails, 'translation' | 'definition'>
   return Boolean(word.translation?.trim() || word.definition?.trim());
 }
 
-/** Derived, never stored. `card` is the word's recognition card, if it has one. */
+/**
+ * Derived, never stored. `card` is the word's recognition card, if it has one. A word whose
+ * meaning was removed keeps its card but counts as incomplete again.
+ */
 export function wordStatus(
   card: (Pick<CardSchedule, 'state' | 'scheduledDays'> & { suspended: boolean }) | null,
+  meaningful: boolean,
 ): WordStatus {
+  if (!meaningful) return 'incomplete';
   if (!card) return 'incomplete';
   if (card.suspended) return 'suspended';
   switch (card.state) {

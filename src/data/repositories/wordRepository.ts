@@ -103,7 +103,7 @@ function toListItem(row: ListRow): WordListItem {
     definition: row.definition,
     starred: row.starred,
     createdAt: row.createdAt,
-    status: wordStatus(card),
+    status: wordStatus(card, hasMeaning(row)),
   };
 }
 
@@ -142,38 +142,31 @@ export function createWordRepository({ db, now, newId }: RepositoryDeps): WordRe
       .where(and(eq(words.id, id), isNull(words.deletedAt)))
       .get();
 
-  /** Card lifecycle (docs/03-data-model.md): create on first meaning, suspend when it is removed. */
-  const syncRecognitionCard = (
-    tx: Pick<RepositoryDeps['db'], 'select' | 'insert' | 'update'>,
+  /**
+   * Card lifecycle (docs/03-data-model.md): create the recognition card when the word first gets a
+   * meaning. Removing the meaning leaves the card alone; the queue skips words without one.
+   */
+  const ensureRecognitionCard = (
+    tx: Pick<RepositoryDeps['db'], 'select' | 'insert'>,
     word: WordRow,
     at: number,
   ) => {
+    if (!hasMeaning(word)) return;
     const card = tx
-      .select()
+      .select({ id: cards.id })
       .from(cards)
       .where(and(eq(cards.wordId, word.id), eq(cards.direction, 'recognition')))
       .get();
-    const meaningful = hasMeaning(word);
-
-    if (!card) {
-      if (meaningful) {
-        tx.insert(cards)
-          .values({
-            id: newId(),
-            wordId: word.id,
-            direction: 'recognition',
-            state: CardState.New,
-            due: at,
-            updatedAt: at,
-          })
-          .run();
-      }
-      return;
-    }
-    if (card.suspended === !meaningful) return;
-    tx.update(cards)
-      .set({ suspended: !meaningful, updatedAt: at })
-      .where(eq(cards.id, card.id))
+    if (card) return;
+    tx.insert(cards)
+      .values({
+        id: newId(),
+        wordId: word.id,
+        direction: 'recognition',
+        state: CardState.New,
+        due: at,
+        updatedAt: at,
+      })
       .run();
   };
 
@@ -332,7 +325,7 @@ export function createWordRepository({ db, now, newId }: RepositoryDeps): WordRe
           })
           .returning()
           .get();
-        syncRecognitionCard(tx, inserted, at);
+        ensureRecognitionCard(tx, inserted, at);
         insertIntoSearchIndex(tx, [inserted]);
         return inserted;
       });
@@ -357,7 +350,7 @@ export function createWordRepository({ db, now, newId }: RepositoryDeps): WordRe
           .returning()
           .get();
         if (!updated) throw new Error(`Word not found: ${id}`);
-        syncRecognitionCard(tx, updated, at);
+        ensureRecognitionCard(tx, updated, at);
         if ('translation' in patch || 'definition' in patch) updateSearchIndex(tx, updated);
         return updated;
       });

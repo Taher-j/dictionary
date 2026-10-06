@@ -153,8 +153,9 @@ library and record the change in `08-decisions.md`.
 - A word with no translation and no definition is **incomplete** and has **no card**.
 - When a word first gets a meaning, create its `recognition` card with `state = 0` and
   `due = now`, in the same transaction.
-- If the meaning is later removed, suspend the card; do not delete it. If a meaning is added
-  again, the card is resumed (unsuspended) with its schedule unchanged.
+- If the meaning is later removed, keep the card unchanged (not deleted, not suspended). The word
+  counts as incomplete again and queues skip it; when a meaning is added back, it returns with its
+  schedule unchanged. `suspended` is only ever set by the user.
 - `recall` cards are created only when the dictionary has `both_directions = 1` (V1).
 - Soft-deleting a word hides its cards from every queue. Restoring the word brings them back unchanged.
 

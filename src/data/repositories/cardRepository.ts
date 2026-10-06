@@ -10,6 +10,8 @@ export interface CardRepository {
   /** Replaces the scheduling state (written by the scheduler after a review). */
   updateSchedule(id: CardId, schedule: CardSchedule): Promise<Card>;
   setSuspended(id: CardId, suspended: boolean): Promise<Card>;
+  /** Suspend ("I know this") or unsuspend all of a word's cards; the schedule is kept. */
+  setSuspendedForWord(wordId: WordId, suspended: boolean): Promise<void>;
 }
 
 type CardRow = typeof cards.$inferSelect;
@@ -51,6 +53,10 @@ export function createCardRepository({ db, now }: RepositoryDeps): CardRepositor
 
     async setSuspended(id, suspended) {
       return updateRow(id, { suspended });
+    },
+
+    async setSuspendedForWord(wordId, suspended) {
+      db.update(cards).set({ suspended, updatedAt: now() }).where(eq(cards.wordId, wordId)).run();
     },
   };
 }

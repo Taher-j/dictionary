@@ -18,7 +18,7 @@ import type {
   WordQuery,
 } from '@/domain/models';
 import { termKeys } from '@/domain/termKeys';
-import { wordStatus } from '@/domain/wordStatus';
+import { hasMeaning, wordStatus } from '@/domain/wordStatus';
 
 /** Word writes change lists, counts, cards and the trash. Local data, so refetching is cheap. */
 export function invalidateWordData(queryClient: QueryClient) {
@@ -48,7 +48,7 @@ export function useWord(id: WordId) {
       const word = await words.getById(id);
       if (!word) return null;
       const card = (await cards.listForWord(id)).find((c) => c.direction === 'recognition');
-      return { word, card: card ?? null, status: wordStatus(card ?? null) };
+      return { word, card: card ?? null, status: wordStatus(card ?? null, hasMeaning(word)) };
     },
   });
 }

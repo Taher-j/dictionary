@@ -67,7 +67,7 @@ name can still change freely afterwards.
 | 2026-10-05 | Drizzle stable (`drizzle-orm` 0.45, `drizzle-kit` 0.31), not the 1.0 release candidate their Expo page installs | Stable release; same APIs used |
 | 2026-10-05 | `word_tags` without `WITHOUT ROWID` | drizzle-kit cannot express it; hand-editing the migration would drift from its snapshot |
 | 2026-10-05 | No `elapsed_days` column on `cards` | Deprecated in ts-fsrs 5.x (removed in 6.0); derivable from `last_review`. Other columns match ts-fsrs 5.4.2 `Card` |
-| 2026-10-05 | Re-adding a meaning resumes a card that was suspended because its meaning was removed | Otherwise the word could never be reviewed again before suspend UI exists. Revisit when user suspend arrives (it must not be undone by an edit) |
+| 2026-10-05 | ~~Re-adding a meaning resumes a card that was suspended because its meaning was removed~~ (replaced 2026-10-06) | Otherwise the word could never be reviewed again before suspend UI exists. Revisit when user suspend arrives (it must not be undone by an edit) |
 | 2026-10-05 | Soft-deleting a dictionary soft-deletes its words with the same timestamp; restoring it restores exactly those words | Words deleted earlier stay in the trash |
 | 2026-10-05 | `PRAGMA journal_size_limit = 32 MB` | Bulk writes can leave a large WAL file behind |
 | 2026-10-05 | `better-sqlite3` and `esbuild` build scripts allowed in `pnpm-workspace.yaml` | Needed for repository tests and drizzle-kit |
@@ -80,3 +80,5 @@ name can still change freely afterwards.
 | 2026-10-06 | Review cards are due by study day (`due` before the next 04:00 rollover); learning and relearning cards by the minute (`due <= now`) | Owner: FSRS keeps the time of day, so `due <= now` hid cards due tonight from a morning session |
 | 2026-10-06 | Today's "about N min" estimate: 10 seconds per card, rounded up | Owner. Can switch to the median of the user's own review times later |
 | 2026-10-06 | `Scheduler.preview` returns `intervalMs`; the label is formatted in the UI | Domain code has no `t()`; labels need plural forms |
+| 2026-10-06 | Removing a meaning no longer suspends the card; queues skip words without a meaning, and only the user suspends | Owner: an edit must not undo the user's own suspend. No schema change |
+| 2026-10-06 | Suspend lives in the session header menu ("I know this") and word detail's menu (Suspend / Unsuspend) | Owner |

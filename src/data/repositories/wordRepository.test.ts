@@ -81,7 +81,7 @@ describe('card lifecycle', () => {
     });
   });
 
-  it('creates the card when a meaning is added, suspends it when removed, resumes it when re-added', async () => {
+  it('creates the card when a meaning is added and keeps it, untouched, when the meaning goes', async () => {
     const { repos, de, tick } = await setup();
     const word = await repos.words.create({ dictionaryId: de.id, term: 'Haus' });
 
@@ -92,16 +92,13 @@ describe('card lifecycle', () => {
 
     tick();
     await repos.words.update(word.id, { translation: '' });
-    expect((await repos.cards.listForWord(word.id))[0]).toMatchObject({
-      id: card?.id,
-      suspended: true,
-    });
+    expect(await repos.cards.listForWord(word.id)).toEqual([card]);
+    const page = await repos.words.list({ dictionaryId: de.id, sort: 'alpha' });
+    expect(page.items[0]?.status).toBe('incomplete');
 
     tick();
     await repos.words.update(word.id, { definition: 'a building' });
-    const after = await repos.cards.listForWord(word.id);
-    expect(after).toHaveLength(1);
-    expect(after[0]).toMatchObject({ id: card?.id, suspended: false });
+    expect(await repos.cards.listForWord(word.id)).toEqual([card]);
   });
 });
 

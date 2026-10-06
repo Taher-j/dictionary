@@ -9,6 +9,10 @@ import {
   type ReviewLogRepository,
 } from '@/data/repositories/reviewLogRepository';
 import {
+  createReviewRepository,
+  type ReviewRepository,
+} from '@/data/repositories/reviewRepository';
+import {
   createSettingsRepository,
   type SettingsRepository,
 } from '@/data/repositories/settingsRepository';
@@ -22,6 +26,7 @@ export interface Repositories {
   tags: TagRepository;
   cards: CardRepository;
   reviewLogs: ReviewLogRepository;
+  reviews: ReviewRepository;
   settings: SettingsRepository;
   trash: TrashRepository;
 }
@@ -35,6 +40,7 @@ export function createRepositories(deps: RepositoryDeps): Repositories {
     tags: createTagRepository(deps),
     cards: createCardRepository(deps),
     reviewLogs: createReviewLogRepository(deps),
+    reviews: createReviewRepository(deps),
     settings: createSettingsRepository(deps),
     trash: createTrashRepository(deps),
   };
