@@ -39,8 +39,8 @@
   },
   "today": {
     "reviewComingSoon": "Reviews arrive soon.",
-    "inbox_one": "{{count}} word needs a meaning",
-    "inbox_other": "{{count}} words need a meaning",
+    "inbox_one": "{{count, number}} word needs a meaning",
+    "inbox_other": "{{count, number}} words need a meaning",
     "inboxHint": "Opens the inbox"
   },
   "library": {
@@ -49,10 +49,10 @@
     "doneReordering": "Done",
     "empty": "No dictionaries yet.",
     "nameWithIcon": "{{icon}} {{name}}",
-    "wordCount_one": "{{count}} word",
-    "wordCount_other": "{{count}} words",
-    "countsWithIncomplete_one": "{{count}} word, {{incomplete}} without meaning",
-    "countsWithIncomplete_other": "{{count}} words, {{incomplete}} without meaning",
+    "wordCount_one": "{{count, number}} word",
+    "wordCount_other": "{{count, number}} words",
+    "countsWithIncomplete_one": "{{count, number}} word, {{incomplete, number}} without meaning",
+    "countsWithIncomplete_other": "{{count, number}} words, {{incomplete, number}} without meaning",
     "moveUp": "Move {{name}} up",
     "moveDown": "Move {{name}} down"
   },
@@ -119,8 +119,8 @@
   },
   "trash": {
     "title": "Trash",
-    "note_one": "Items here are deleted for good after {{count}} day.",
-    "note_other": "Items here are deleted for good after {{count}} days.",
+    "note_one": "Items here are deleted for good after {{count, number}} day.",
+    "note_other": "Items here are deleted for good after {{count, number}} days.",
     "empty": "The trash is empty.",
     "restore": "Restore",
     "restoreLabel": "Restore {{name}}",
@@ -137,15 +137,15 @@
     "title": "Developer tools",
     "open": "Developer tools",
     "unavailable": "Developer tools are only available in development builds.",
-    "counts": "{{words}} words, {{cards}} cards, {{reviewLogs}} review logs",
+    "counts": "{{words, number}} words, {{cards, number}} cards, {{reviewLogs, number}} review logs",
     "seed": "Seed 50,000 words and 200,000 reviews",
     "wipe": "Delete all data",
     "benchmark": "Time list and search queries",
     "working": "Working…",
     "progress": {
-      "words": "Words: {{done}} of {{total}}",
-      "reviewLogs": "Review logs: {{done}} of {{total}}"
+      "words": "Words: {{done, number}} of {{total, number}}",
+      "reviewLogs": "Review logs: {{done, number}} of {{total, number}}"
     },
-    "timing": "Median {{median}} ms, max {{max}} ms, {{rows}} rows"
+    "timing": "Median {{median}} ms, max {{max}} ms, {{rows, number}} rows"
   }
 }
