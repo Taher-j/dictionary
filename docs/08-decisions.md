@@ -76,3 +76,7 @@ name can still change freely afterwards.
 | 2026-10-05 | Dictionaries are reordered with up/down buttons in a "Reorder" mode, not drag and drop | Owner: no new dependency; works with screen readers |
 | 2026-10-05 | `/add?context=` prefills the Example field and shows it expanded | Owner: the context is the sentence where the word was found |
 | 2026-10-05 | `react-native-keyboard-controller` for keyboard handling (`KeyboardProvider`, `KeyboardAvoidingView`, `KeyboardAwareScrollView`, `KeyboardStickyView`) | Owner approved it as the fallback; on the S24 Ultra React Native's `KeyboardAvoidingView` left quick add's buttons behind the keyboard (edge-to-edge) |
+| 2026-10-06 | `ts-fsrs` 5.4.2 (stable; 6.0 is in beta). It runs FSRS-6 (21 weights) | Milestone 4 |
+| 2026-10-06 | Review cards are due by study day (`due` before the next 04:00 rollover); learning and relearning cards by the minute (`due <= now`) | Owner: FSRS keeps the time of day, so `due <= now` hid cards due tonight from a morning session |
+| 2026-10-06 | Today's "about N min" estimate: 10 seconds per card, rounded up | Owner. Can switch to the median of the user's own review times later |
+| 2026-10-06 | `Scheduler.preview` returns `intervalMs`; the label is formatted in the UI | Domain code has no `t()`; labels need plural forms |

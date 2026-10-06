@@ -17,14 +17,16 @@ Scheduler wrapper, minimum surface:
 ```ts
 // src/domain/scheduler.ts
 export interface Scheduler {
-  newCard(now: number): CardState;
-  preview(card: CardState, now: number): Record<Rating, { due: number; intervalLabel: string }>;
-  apply(card: CardState, rating: Rating, now: number): CardState;
+  newCard(now: number): CardSchedule;
+  preview(card: CardSchedule, now: number): Record<Rating, { due: number; intervalMs: number }>;
+  apply(card: CardSchedule, rating: Rating, now: number): CardSchedule;
 }
 ```
 
-`CardState` is the domain type that maps 1:1 to the `cards` scheduling columns. Mapping to and
-from the `ts-fsrs` card type happens inside this file only.
+`CardSchedule` is the domain type that maps 1:1 to the `cards` scheduling columns (`CardState` is
+the state enum). Mapping to and from the `ts-fsrs` card type happens inside this file only. The
+interval label ("3 d") is formatted in the UI through `t()`, from `intervalParts()` in
+`src/domain/intervals.ts`.
 
 ### Stages
 
@@ -48,8 +50,10 @@ new-word limit and the streak all use the study day, not the calendar day.
 
 ## Session algorithm
 
-1. **Collect due cards**: `due <= now`, `suspended = 0`, word not deleted, dictionary not deleted
-   and `in_daily_review = 1`. Order: learning/relearning first, then review cards by `due` ascending.
+1. **Collect due cards**: `suspended = 0`, word has a meaning and is not deleted, dictionary not
+   deleted and `in_daily_review = 1`. Learning/relearning cards are due when `due <= now`; review
+   cards when `due` is before the next study-day rollover (so a card due tonight is in this morning's
+   queue). Order: learning/relearning first, then review cards by `due` ascending.
 2. **Add new cards** up to today's remaining new limit, **newest first** (by word `created_at`),
    interleaved one after every four reviews.
 3. **Cap** the queue at the session size.
