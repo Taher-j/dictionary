@@ -12,12 +12,25 @@ export interface IconButtonProps extends Omit<PressableProps, 'children' | 'styl
   size?: number;
 }
 
-export function IconButton({ icon, tone = 'default', size = 24, ...rest }: IconButtonProps) {
+export function IconButton({
+  icon,
+  tone = 'default',
+  size = 24,
+  disabled,
+  accessibilityState,
+  ...rest
+}: IconButtonProps) {
   const { colors } = useTheme();
   return (
     <Pressable
       accessibilityRole="button"
-      style={({ pressed }) => [styles.button, pressed && styles.pressed]}
+      accessibilityState={{ ...accessibilityState, disabled: Boolean(disabled) }}
+      disabled={disabled}
+      style={({ pressed }) => [
+        styles.button,
+        pressed && styles.pressed,
+        disabled && styles.disabled,
+      ]}
       {...rest}
     >
       <SymbolView
@@ -39,5 +52,8 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.6,
+  },
+  disabled: {
+    opacity: 0.35,
   },
 });

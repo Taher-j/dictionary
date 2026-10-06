@@ -1,14 +1,15 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 
-import { dictionaryKeys, trashKeys, wordKeys } from '@/data/queryKeys';
+import { dictionaryKeys, reviewKeys, trashKeys, wordKeys } from '@/data/queryKeys';
 import { useRepositories } from '@/data/RepositoriesProvider';
 import type { DictionaryId, DictionaryPatch, NewDictionary } from '@/domain/models';
 
-/** Dictionary changes also change word lists, counts and the trash. */
+/** Dictionary changes also change word lists, counts, review counts and the trash. */
 export function invalidateDictionaryData(queryClient: QueryClient) {
   void queryClient.invalidateQueries({ queryKey: dictionaryKeys.all });
   void queryClient.invalidateQueries({ queryKey: wordKeys.all });
   void queryClient.invalidateQueries({ queryKey: trashKeys.all });
+  void queryClient.invalidateQueries({ queryKey: reviewKeys.all });
 }
 
 /** Library list with word counts, in display order. */

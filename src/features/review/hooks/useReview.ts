@@ -29,6 +29,9 @@ export function useTodaySummary() {
   return useQuery({
     queryKey: [...reviewKeys.today(), dailyNewLimit],
     queryFn: () => reviews.todaySummary(dailyNewLimit),
+    // Cards become due with time alone (learning steps, the 04:00 rollover); the query is a
+    // cheap local count.
+    refetchInterval: 60 * 1000,
   });
 }
 

@@ -105,7 +105,6 @@ export function ReviewScreen() {
           <IconButton
             icon={{ ios: 'arrow.uturn.backward', android: 'undo', web: 'undo' }}
             accessibilityLabel={t('review.undo')}
-            accessibilityState={{ disabled: !session.lastAnswer || busy }}
             disabled={!session.lastAnswer || busy}
             onPress={() =>
               undo.mutate(undefined, { onError: () => showToast(t('review.saveFailed')) })
