@@ -30,6 +30,7 @@ export function DictionaryForm({ title, intro, initial, busy, onSubmit }: Dictio
   return (
     <Screen
       title={title}
+      avoidKeyboard={false}
       footer={
         <Button
           label={t('common.save')}

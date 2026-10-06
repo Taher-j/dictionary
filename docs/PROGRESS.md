@@ -59,9 +59,6 @@ Milestone 1 timings: every list and search query under 20 ms at 50,000 words wit
 
 - In quick add with the keyboard closed, a toast (for example "moved to the trash" after deleting
   from a word opened via the duplicate link) covers the Save button until it times out.
-- The first-launch / new-dictionary sheet (`formSheet`, `fitToContents`) shifts too far up while the
-  keyboard is open: the title and the top of the Name field go off screen (release build,
-  2026-10-06). Probably the sheet and `KeyboardAvoidingView` both avoid the keyboard.
 - Restoring a word gives no duplicate warning when a word with the same `term_norm` was added while
   it was in the trash. The docs do not cover this case yet.
 
@@ -76,7 +73,8 @@ Milestone 1 timings: every list and search query under 20 ms at 50,000 words wit
   words and 200,000 logs takes about 70 s; WAL stays at 32 MB after bulk writes.
 - M2, checked by Claude over adb on 2026-10-06: buttons and toast stay above the keyboard; Save
   closes the keyboard. 50,000-word scrolling checked on 2026-10-05. First-launch sheet opens on a
-  fresh install of the release build (layout issue with the keyboard, see Known issues).
+  fresh install of the release build; with the keyboard open it shows title, fields and Save
+  (fixed on 2026-10-06: sheets no longer avoid the keyboard twice).
 - iOS build: not verified, needs a Mac.
 
 ## Session log

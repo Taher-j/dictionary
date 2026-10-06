@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { KeyboardAvoidingView, KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
 
@@ -21,6 +21,11 @@ export interface ScreenProps {
   padded?: boolean;
   /** Screens under a navigation header leave out 'top'. */
   edges?: readonly Edge[];
+  /**
+   * Move content out of the keyboard's way. Form sheets pass false: the native sheet already
+   * moves itself above the keyboard, and avoiding it twice pushes the content off screen.
+   */
+  avoidKeyboard?: boolean;
 }
 
 /** Every screen is wrapped in Screen. It owns the safe areas; no screen assumes the bottom edge. */
@@ -31,6 +36,7 @@ export function Screen({
   scroll = true,
   padded = true,
   edges = ALL_EDGES,
+  avoidKeyboard = true,
 }: ScreenProps) {
   const { colors } = useTheme();
   const contentStyle = [padded && styles.padded, styles.gap];
@@ -49,8 +55,12 @@ export function Screen({
     <SafeAreaView edges={edges} style={[styles.root, { backgroundColor: colors.background }]}>
       {/* keyboard-controller: React Native's own KeyboardAvoidingView misbehaves with
           Android edge-to-edge (docs/08-decisions.md). */}
-      <KeyboardAvoidingView style={styles.root} behavior="padding">
-        {scroll ? (
+      <KeyboardAvoidingView style={styles.root} behavior="padding" enabled={avoidKeyboard}>
+        {scroll && !avoidKeyboard ? (
+          <ScrollView contentContainerStyle={contentStyle} keyboardShouldPersistTaps="handled">
+            {body}
+          </ScrollView>
+        ) : scroll ? (
           <KeyboardAwareScrollView
             contentContainerStyle={contentStyle}
             keyboardShouldPersistTaps="handled"
