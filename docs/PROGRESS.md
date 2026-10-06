@@ -70,7 +70,8 @@ Milestone 1 timings: every list and search query under 20 ms at 50,000 words wit
   pending migrations a `snapshots/snapshot-…-pre-migrate.db` was written first; seeding 50,000
   words and 200,000 logs takes about 70 s; WAL stays at 32 MB after bulk writes.
 - M2, checked by Claude over adb on 2026-10-06: buttons and toast stay above the keyboard; Save
-  closes the keyboard; first-launch sheet and 50,000-word scrolling checked on 2026-10-05.
+  closes the keyboard. 50,000-word scrolling checked on 2026-10-05. First-launch sheet: owner to
+  confirm on a fresh install.
 - iOS build: not verified, needs a Mac.
 
 ## Session log
