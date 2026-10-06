@@ -9,7 +9,7 @@ and add one line to the session log.
 | --- | --- |
 | 0 — Project setup | Done (iOS unverified) |
 | 1 — Data layer | Done (iOS unverified) |
-| 2 — Dictionaries and words | Not started |
+| 2 — Dictionaries and words | Done (iOS unverified) |
 | 4 — Review core | Not started |
 | 3 — Search, tags and filters | Not started |
 | 5 — Backup and restore (MVP gate) | Not started |
@@ -22,47 +22,43 @@ and add one line to the session log.
 
 (Rows are in build order: 4 comes before 3.)
 
-## Current milestone: 1 — Data layer (done; next is Milestone 2, start with a task plan)
+## Current milestone: 2 — Dictionaries and words (done; next is Milestone 4, start with a task plan)
 
-Milestone 0 is done; its checklist is in git history (`docs/PROGRESS.md` before Milestone 1).
+Milestone 1's checklist and phone timings are in git history (`docs/PROGRESS.md` before Milestone 2).
+Milestone 1 timings: every list and search query under 20 ms at 50,000 words with FTS5.
 
 ### Decisions
 
-- [x] Q6 `LIKE` or FTS5: FTS5 for meanings, measured on the phone (see `08-decisions.md`)
+- [x] `expo-haptics`, `expo-clipboard`, `react-native-keyboard-controller` added (owner approved)
+- [x] Reorder with up/down buttons; `/add?context=` prefills Example (see `08-decisions.md`)
 
 ### Tasks
 
-- [x] `expo-sqlite` + Drizzle + drizzle-kit; schema for all tables; migrations `0000_init`,
-      `0001_words_fold_index`, `0002_words_fts`
-- [x] `client.ts`: WAL, foreign keys, `VACUUM INTO` snapshot when migrations are pending (keep 5),
-      migrate
-- [x] `src/domain/models.ts` with branded ids
-- [x] `src/domain/termKeys.ts` with the full test list
-- [x] Repositories: dictionaries, words, tags, cards, review logs, settings
-- [x] `RepositoriesProvider` and `queryKeys.ts`
-- [x] Repository tests in Node with `better-sqlite3`, same schema and migrations
-- [x] Dev screen (Settings → Developer tools, dev builds only): seed, wipe, timings
+- [x] Repositories: Library counts, reorder, Inbox list and count, trash list, purge after 30 days
+      at startup, `lastDictionaryId` setting (66 tests)
+- [x] UI kit: toast (Zustand store, screen-reader announcement), action sheet, text field, chip,
+      icon button, list row, status badge; `services/haptics.ts`, `services/clipboard.ts`
+- [x] Screens: first launch, Library, dictionary (FlashList, A-Z / recent), quick add, word detail,
+      Inbox, Trash
+- [x] Keyboard handling with `react-native-keyboard-controller`
 
 ### Done-when checks
 
-- [x] Migrations run from an empty database and repository tests pass (59 tests, `pnpm check`)
-- [x] 50,000 words on the phone: first list page and search under 100 ms (with FTS5; table below)
-- [x] Every user-editable table has `id`, `updated_at`, `deleted_at` (tested)
-- [x] Lint stops files outside `src/data` from importing the database (and `expo-file-system`
-      outside `src/services`)
+- [x] Add a word from any tab in about five seconds: [+] is in the tab bar on every tab, quick add
+      opens with the term focused, Save closes (checked over adb; owner to confirm by hand)
+- [x] 50,000-word dictionary scrolls without blanks: fling over adb, 746 frames, p99 16 ms,
+      0.5 % janky, no blank rows in screenshots taken mid-fling
+- [x] Duplicate messages: covered by `duplicates.test.ts`; "Already in this dictionary" checked on
+      the phone
+- [x] Delete, restore, purge: repository tests; delete and restore from Trash checked on the phone,
+      the restored word kept its card ("New")
+- [x] Completing an incomplete word creates exactly one recognition card: repository test; on the
+      phone the status changed from "Needs meaning" to "New"
 
-Timings on the S24 Ultra, 50,000 words / 45,017 cards / 200,000 review logs, median of 7 runs:
+### Known issues
 
-| Query | Before (LIKE) | After (FTS5) |
-| --- | --- | --- |
-| List A-Z, first page | 4.3 ms | 3.3 ms |
-| List recent, first page | 5.1 ms | 3.0 ms |
-| Search prefix "ka" (one dictionary) | 113.7 ms | 6.3 ms |
-| Search "mountain" in meanings (one dictionary) | 121.8 ms | 15.7 ms |
-| Search "mountain", all dictionaries | — | 16.0 ms |
-| Search prefix "ka", all dictionaries | — | 7.5 ms |
-| Search with no match | 102.4 ms | 0.9 ms |
-| Duplicate check | 9.0 ms | 6.6 ms |
+- In quick add with the keyboard closed, a toast (for example "moved to the trash" after deleting
+  from a word opened via the duplicate link) covers the Save button until it times out.
 
 ## Verified on device only (owner to confirm)
 
@@ -73,6 +69,8 @@ Timings on the S24 Ultra, 50,000 words / 45,017 cards / 200,000 review logs, med
 - M1, checked by Claude over adb on 2026-10-05: database opens and migrates on the phone; with
   pending migrations a `snapshots/snapshot-…-pre-migrate.db` was written first; seeding 50,000
   words and 200,000 logs takes about 70 s; WAL stays at 32 MB after bulk writes.
+- M2, checked by Claude over adb on 2026-10-06: buttons and toast stay above the keyboard; Save
+  closes the keyboard; first-launch sheet and 50,000-word scrolling checked on 2026-10-05.
 - iOS build: not verified, needs a Mac.
 
 ## Session log
@@ -81,3 +79,4 @@ Timings on the S24 Ultra, 50,000 words / 45,017 cards / 200,000 review logs, med
 | --- | --- | --- |
 | 2026-10-05 | Milestone 0: scaffold (SDK 57.0.26), tooling, lint rules, ui kit, i18n, tab shell, dev build on Android | Milestone 1 — Data layer (plan first) |
 | 2026-10-05 | Milestone 1: schema + 3 migrations, repositories, startup with snapshot, dev tools; Q6 decided (FTS5); fixed WAL growth | Milestone 2 — Dictionaries and words (plan first) |
+| 2026-10-05/06 | Milestone 2: Library, dictionary list, quick add, word detail, Inbox, Trash; keyboard-controller | Milestone 4 — Review core (plan first) |
