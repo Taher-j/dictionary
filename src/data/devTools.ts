@@ -20,6 +20,15 @@ import { CardState, type DictionaryId } from '@/domain/models';
 import { termKeys } from '@/domain/termKeys';
 
 export const SEED_DICTIONARY_NAME = 'Seed (dev)';
+/** Seed tags with the share of words that get each: common, middling and rare tags. */
+const SEED_TAGS: readonly (readonly [string, number])[] = [
+  ['B1', 0.2],
+  ['verbs', 0.15],
+  ['nouns', 0.15],
+  ['travel', 0.05],
+  ['food', 0.03],
+  ['idioms', 0.005],
+];
 const ROWS_PER_TRANSACTION = 500;
 const ROWS_PER_STATEMENT = 100;
 const DAY_MS = 86_400_000;
@@ -165,11 +174,16 @@ export function createDevTools(
       const at = now();
       const dictionary = await repositories.dictionaries.create({ name: SEED_DICTIONARY_NAME });
       const cardIds: string[] = [];
+      const seedTags = [];
+      for (const [name, share] of SEED_TAGS) {
+        seedTags.push({ id: (await repositories.tags.getOrCreate(name)).id, share });
+      }
 
       for (let done = 0; done < options.words; done += ROWS_PER_TRANSACTION) {
         const size = Math.min(ROWS_PER_TRANSACTION, options.words - done);
         const wordRows: (typeof words.$inferInsert)[] = [];
         const cardRows: (typeof cards.$inferInsert)[] = [];
+        const tagRows: (typeof wordTags.$inferInsert)[] = [];
 
         for (let i = 0; i < size; i++) {
           const syllables = 2 + Math.floor(rand() * 3);
@@ -187,9 +201,13 @@ export function createDevTools(
             termNorm: norm,
             termFold: fold,
             translation: meaningful ? `${pick(rand, GLOSSES)}, ${pick(rand, GLOSSES)}` : null,
+            starred: rand() < 0.05,
             createdAt,
             updatedAt: createdAt,
           });
+          for (const tag of seedTags) {
+            if (rand() < tag.share) tagRows.push({ wordId: id, tagId: tag.id });
+          }
           if (meaningful) {
             const roll = rand();
             const state =
@@ -224,6 +242,7 @@ export function createDevTools(
         db.transaction((tx) => {
           insertInStatements(wordRows, (part) => tx.insert(words).values(part).run());
           insertInStatements(cardRows, (part) => tx.insert(cards).values(part).run());
+          insertInStatements(tagRows, (part) => tx.insert(wordTags).values(part).run());
           insertInStatements(wordRows, (part) =>
             insertIntoSearchIndex(
               tx,
@@ -294,6 +313,7 @@ export function createDevTools(
 
     async benchmark(runs = 7) {
       const dictionaryId = (await findSeedDictionary()) ?? undefined;
+      const tagIds = new Map((await repositories.tags.list()).map((tag) => [tag.name, tag.id]));
       const cases: { name: string; run: () => Promise<number> }[] = [
         {
           name: 'list A-Z, first page',
@@ -324,6 +344,27 @@ export function createDevTools(
         {
           name: 'search with no match',
           run: async () => (await repositories.words.search('qqxz', { dictionaryId })).length,
+        },
+        {
+          name: 'filter: tag "idioms" (rare), grouped',
+          run: async () =>
+            (await repositories.words.list({ tagId: tagIds.get('idioms'), sort: 'grouped' })).items
+              .length,
+        },
+        {
+          name: 'filter: mature + starred, grouped',
+          run: async () =>
+            (await repositories.words.list({ status: 'mature', starred: true, sort: 'grouped' }))
+              .items.length,
+        },
+        {
+          name: 'search "ka" + tag "B1"',
+          run: async () =>
+            (await repositories.words.search('ka', { tagId: tagIds.get('B1') })).length,
+        },
+        {
+          name: 'search "mountain" + status new',
+          run: async () => (await repositories.words.search('mountain', { status: 'new' })).length,
         },
         {
           name: 'duplicate check',

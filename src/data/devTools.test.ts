@@ -57,8 +57,20 @@ describe('devTools', () => {
       expect(() => scheduler.preview(toCard(row), time())).not.toThrow();
     }
 
+    // Seeded words carry tags; a rare tag still has some words.
+    const tags = await repos.tags.listWithCounts();
+    expect(tags.map((tag) => tag.name)).toEqual([
+      'B1',
+      'food',
+      'idioms',
+      'nouns',
+      'travel',
+      'verbs',
+    ]);
+    expect(tags.find((tag) => tag.name === 'B1')?.wordCount).toBeGreaterThan(150);
+
     const results = await devTools.benchmark(3);
-    expect(results.map((r) => r.name)).toHaveLength(8);
+    expect(results.map((r) => r.name)).toHaveLength(12);
     expect(results[0]?.rows).toBe(50);
 
     await devTools.wipe();
