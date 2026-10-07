@@ -101,7 +101,18 @@ Rules:
   meaning, never duplicates. Hide the mode when fewer than four candidates exist.
 - Word -> meaning and meaning -> word are **directions** (`recognition` / `recall`), not modes.
 
-Not planned before V2: fill in the blank, listen-and-type, matching. Never: speed round.
+- **Free practice** (M7): the owner picks the source (a dictionary, a tag or weak words), the
+  modes and the card count on Today → Practice; the last setup is remembered. Cards are a random
+  sample (suspended cards left out, any dictionary). The chosen modes take turns; typing only fits
+  recall cards, multiple choice needs four options, anything else is a flashcard. Only Again
+  brings a card back in the session; undo deletes the practice log.
+- In reviews the mode is picked per card (`pickMode`); "Flashcards only" in Settings turns typing
+  and multiple choice off.
+- A card's mode and options are fixed while it is on screen: saving the answer changes its state,
+  which must not switch the mode under the feedback.
+- Typing tolerance: one edit counts as close only for answers of 4+ characters.
+
+Not planned before V2: fill in the blank, listen-and-type, matching (see Q8). Never: speed round.
 
 ## Weak words and leeches (V1)
 

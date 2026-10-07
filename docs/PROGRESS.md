@@ -14,7 +14,7 @@ and add one line to the session log.
 | 3 — Search, tags and filters | Done (iOS unverified) |
 | 5 — Backup and restore (MVP gate) | Done (iOS unverified) |
 | 6 — Import, export and bulk edits | Not started |
-| 7 — Practice modes | In progress |
+| 7 — Practice modes | Done (iOS unverified) |
 | 8 — Statistics and motivation | Not started |
 | 9 — Capture from anywhere | Not started |
 | 10 — Polish, accessibility, performance | Not started |
@@ -22,7 +22,7 @@ and add one line to the session log.
 
 (Rows are in build order: 4 comes before 3.)
 
-## Current milestone: 7 — Practice modes (in progress, during the owner's trial)
+## Current milestone: 7 — Practice modes (done; owner trial continues)
 
 Milestone 5's checklist is in git history (`docs/PROGRESS.md` before Milestone 7). Plan approved on
 2026-10-07: part A (directions and modes), phone check, then part B (free practice and extras).
@@ -40,16 +40,31 @@ Milestone 5's checklist is in git history (`docs/PROGRESS.md` before Milestone 7
 
 ### Tasks — part B
 
-- [ ] Free practice (dictionary, tag, weak words), logged with `scheduled = 0`
-- [ ] Weak-words query; leech prompt
-- [ ] Speak button (`src/services/speech.ts`, voice check); lookup links
+- [x] Free practice (dictionary, tag, weak words), logged with `scheduled = 0`
+- [x] Weak-words query; leech prompt
+- [x] Speak button (`src/services/speech.ts`, voice check); lookup links
 
 ### Done-when checks
 
 - [x] Each mode's `grade()` has unit tests, including alternatives and one-edit tolerance
 - [x] A 20-card session mixes all three modes: test (`practiceSession.test.ts`) and phone
       (2026-10-07, seeded data: 16 choice, 11 flashcard, 2 typing in one session)
-- [ ] A test asserts that free practice leaves every card's state and due date unchanged
+- [x] A test asserts that free practice leaves every card's state and due date unchanged
+      (`freePractice.test.ts`; phone 2026-10-07: 14-card practice, all 14 cards unchanged, 14 logs
+      with `scheduled = 0` in all three modes)
+
+### Checked on the phone (2026-10-07)
+
+Speech voices (en 52, de 9, ar 9) and playback; a 20-card review mixing all three modes; practice
+setup and session; speak button and lookup link (Chrome opened Wiktionary). Not observed: the
+leech prompt (needs 8 lapses; unit-tested). Owner to check: typing umlauts and Arabic on the
+Samsung keyboard (adb cannot type them).
+
+### Next steps
+
+1. Owner trial continues; collect annoyances. Q8 (more practice games) is open.
+2. Remaining V1 milestones: 6 (import/export, bulk edits), 8 (statistics), 9 (capture), then 10
+   and 11.
 
 ### Known issues
 
@@ -90,3 +105,4 @@ Milestone 5's checklist is in git history (`docs/PROGRESS.md` before Milestone 7
 | 2026-10-07 | M4 done (TalkBack issue parked). Milestone 3: filters in repositories, tag merge/rename/delete, Library search and chips, word tags, Settings → Tags, seeded tags | Q2, then plan Milestone 5 |
 | 2026-10-07 | Owner test pass: action sheet animation, tab labels, Theme and Language settings, German and Arabic (RTL) | Q2, then plan Milestone 5 |
 | 2026-10-07 | Milestone 5: backup format, writer, streaming restore, snapshots (daily, list, restore), screens, reminder; phone round trip at 50,000 words | Owner trial (two weeks), then order Milestones 6-9 |
+| 2026-10-07 | Milestone 7: recall cards, sibling rule, typing and multiple choice in reviews, practice setup and sessions, weak words, leech prompt, speech, lookup links; fixed mode switching under feedback | Owner trial; Q8; next V1 milestone |
