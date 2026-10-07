@@ -237,6 +237,7 @@
     "counts": "{{words, number}} كلمة، {{cards, number}} بطاقة، {{reviewLogs, number}} مراجعة",
     "seed": "إنشاء 50٬000 كلمة و200٬000 مراجعة",
     "wipe": "حذف كل البيانات",
+    "removeSeed": "إزالة بيانات الاختبار (تبقى كلماتك)",
     "benchmark": "قياس استعلامات القوائم والبحث",
     "working": "جارٍ العمل…",
     "progress": {

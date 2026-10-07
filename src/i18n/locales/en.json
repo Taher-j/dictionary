@@ -207,7 +207,8 @@
       "words": "Words: {{done, number}} of {{total, number}}",
       "reviewLogs": "Review logs: {{done, number}} of {{total, number}}"
     },
-    "timing": "Median {{median}} ms, max {{max}} ms, {{rows, number}} rows"
+    "timing": "Median {{median}} ms, max {{max}} ms, {{rows, number}} rows",
+    "removeSeed": "Remove seeded data (keeps your own words)"
   },
   "review": {
     "revealHint": "Double tap to reveal the answer",

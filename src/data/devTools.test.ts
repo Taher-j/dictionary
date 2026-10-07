@@ -77,3 +77,24 @@ describe('devTools', () => {
     expect(await devTools.counts()).toEqual({ dictionaries: 0, words: 0, cards: 0, reviewLogs: 0 });
   });
 });
+
+describe('devTools.removeSeed', () => {
+  it('removes the seed dictionary and unused seed tags, and keeps everything else', async () => {
+    const { devTools, repos } = setup();
+    const mine = await repos.dictionaries.create({ name: 'Mine' });
+    const word = await repos.words.create({
+      dictionaryId: mine.id,
+      term: 'Haus',
+      translation: 'house',
+    });
+    const verbs = await repos.tags.getOrCreate('verbs'); // a seed tag name, used by my word
+    await repos.tags.setWordTags(word.id, [verbs.id]);
+    await devTools.seed({ words: 300, reviewLogs: 200, meaningRatio: 0.9 });
+
+    expect(await devTools.removeSeed()).toBe(300);
+    expect(await devTools.counts()).toEqual({ dictionaries: 1, words: 1, cards: 1, reviewLogs: 0 });
+    expect((await repos.tags.list()).map((t) => t.name)).toEqual(['verbs']);
+    expect((await repos.words.search('house')).map((w) => w.term)).toEqual(['Haus']);
+    expect(await devTools.removeSeed()).toBe(0);
+  });
+});

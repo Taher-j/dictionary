@@ -42,6 +42,14 @@ export function useDevTools() {
     onSettled: () => void afterChange(),
   });
 
+  const removeSeed = useMutation({
+    mutationFn: async () => {
+      await devTools?.removeSeed();
+      setResults(null);
+    },
+    onSettled: () => void afterChange(),
+  });
+
   const benchmark = useMutation({
     mutationFn: async () => (devTools ? devTools.benchmark() : []),
     onSuccess: setResults,
@@ -52,10 +60,11 @@ export function useDevTools() {
     counts: counts.data,
     progress,
     results,
-    busy: seed.isPending || wipe.isPending || benchmark.isPending,
-    error: seed.error ?? wipe.error ?? benchmark.error,
+    busy: seed.isPending || wipe.isPending || removeSeed.isPending || benchmark.isPending,
+    error: seed.error ?? wipe.error ?? removeSeed.error ?? benchmark.error,
     seed: () => seed.mutate(),
     wipe: () => wipe.mutate(),
+    removeSeed: () => removeSeed.mutate(),
     benchmark: () => benchmark.mutate(),
   };
 }

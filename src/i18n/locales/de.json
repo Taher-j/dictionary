@@ -201,6 +201,7 @@
     "counts": "{{words, number}} Wörter, {{cards, number}} Karten, {{reviewLogs, number}} Wiederholungen",
     "seed": "50.000 Wörter und 200.000 Wiederholungen anlegen",
     "wipe": "Alle Daten löschen",
+    "removeSeed": "Testdaten entfernen (eigene Wörter bleiben)",
     "benchmark": "Listen- und Suchabfragen messen",
     "working": "Läuft…",
     "progress": {

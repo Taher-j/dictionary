@@ -64,6 +64,11 @@ export interface BenchmarkResult {
 export interface DevTools {
   seed(options: SeedOptions, onProgress?: (progress: SeedProgress) => void): Promise<void>;
   wipe(): Promise<void>;
+  /**
+   * Deletes the seed dictionary for good (with its words, cards, logs and tag links) and seed tags
+   * no other word uses; everything else stays. Returns the number of words removed.
+   */
+  removeSeed(): Promise<number>;
   counts(): Promise<TableCounts>;
   benchmark(runs?: number): Promise<BenchmarkResult[]>;
 }
@@ -280,6 +285,42 @@ export function createDevTools(
         onProgress?.({ phase: 'reviewLogs', done: done + size, total: options.reviewLogs });
         await yieldToUi();
       }
+    },
+
+    async removeSeed() {
+      const dictionaryId = await findSeedDictionary();
+      if (!dictionaryId) return 0;
+      const seedWords = sql`(SELECT id FROM words WHERE dictionary_id = ${dictionaryId})`;
+      const removed = db.transaction((tx) => {
+        const [row] = tx.all<{ n: number }>(
+          sql`SELECT count(*) AS n FROM words WHERE dictionary_id = ${dictionaryId}`,
+        );
+        tx.run(
+          sql`DELETE FROM review_logs WHERE card_id IN (SELECT id FROM cards WHERE word_id IN ${seedWords})`,
+        );
+        tx.run(sql`DELETE FROM cards WHERE word_id IN ${seedWords}`);
+        tx.run(sql`DELETE FROM word_tags WHERE word_id IN ${seedWords}`);
+        tx.run(sql`DELETE FROM words WHERE dictionary_id = ${dictionaryId}`);
+        tx.run(sql`DELETE FROM import_batches WHERE dictionary_id = ${dictionaryId}`);
+        tx.run(sql`DELETE FROM dictionaries WHERE id = ${dictionaryId}`);
+        for (const [name] of SEED_TAGS) {
+          tx.run(
+            sql`DELETE FROM tags WHERE name = ${name}
+                AND id NOT IN (SELECT tag_id FROM word_tags)`,
+          );
+        }
+        // Rebuilt from the remaining words: cheaper than deleting 50,000 index rows one by one.
+        clearSearchIndex(tx);
+        tx.run(
+          sql`INSERT INTO words_fts (word_id, translation, definition)
+              SELECT id, translation, definition FROM words
+              WHERE translation IS NOT NULL OR definition IS NOT NULL`,
+        );
+        return row?.n ?? 0;
+      });
+      // Give the space back to the phone (the file held 50,000 words).
+      db.run(sql`VACUUM`);
+      return removed;
     },
 
     async wipe() {
