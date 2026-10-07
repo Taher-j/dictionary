@@ -39,6 +39,12 @@ export function DevToolsScreen() {
         <Button label={t('dev.seed')} onPress={dev.seed} disabled={dev.busy} />
         <Button label={t('dev.benchmark')} onPress={dev.benchmark} disabled={dev.busy} />
         <Button
+          label={t('dev.createGermanEnglish')}
+          variant="secondary"
+          onPress={dev.createGermanEnglish}
+          disabled={dev.busy}
+        />
+        <Button
           label={t('dev.removeSeed')}
           variant="secondary"
           onPress={dev.removeSeed}

@@ -218,7 +218,8 @@
     "removeSeed": "Remove seeded data (keeps your own words)",
     "voicesTitle": "Speech voices",
     "voices": "{{lang}}: {{count, number}} voices",
-    "speakTest": "Speak {{lang}}"
+    "speakTest": "Speak {{lang}}",
+    "createGermanEnglish": "Create the German – English test dictionary"
   },
   "review": {
     "revealHint": "Double tap to reveal the answer",

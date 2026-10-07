@@ -246,6 +246,7 @@
     "wipe": "حذف كل البيانات",
     "removeSeed": "إزالة بيانات الاختبار (تبقى كلماتك)",
     "voicesTitle": "أصوات النطق",
+    "createGermanEnglish": "إنشاء قاموس الاختبار ألماني – إنجليزي",
     "voices": "{{lang}}: {{count, number}} صوت",
     "speakTest": "نطق {{lang}}",
     "benchmark": "قياس استعلامات القوائم والبحث",

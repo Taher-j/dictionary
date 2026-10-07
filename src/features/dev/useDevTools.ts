@@ -42,6 +42,13 @@ export function useDevTools() {
     onSettled: () => void afterChange(),
   });
 
+  const createGermanEnglish = useMutation({
+    mutationFn: async () => {
+      await devTools?.createGermanEnglish();
+    },
+    onSettled: () => void afterChange(),
+  });
+
   const removeSeed = useMutation({
     mutationFn: async () => {
       await devTools?.removeSeed();
@@ -60,11 +67,18 @@ export function useDevTools() {
     counts: counts.data,
     progress,
     results,
-    busy: seed.isPending || wipe.isPending || removeSeed.isPending || benchmark.isPending,
-    error: seed.error ?? wipe.error ?? removeSeed.error ?? benchmark.error,
+    busy:
+      seed.isPending ||
+      wipe.isPending ||
+      removeSeed.isPending ||
+      createGermanEnglish.isPending ||
+      benchmark.isPending,
+    error:
+      seed.error ?? wipe.error ?? removeSeed.error ?? createGermanEnglish.error ?? benchmark.error,
     seed: () => seed.mutate(),
     wipe: () => wipe.mutate(),
     removeSeed: () => removeSeed.mutate(),
+    createGermanEnglish: () => createGermanEnglish.mutate(),
     benchmark: () => benchmark.mutate(),
   };
 }

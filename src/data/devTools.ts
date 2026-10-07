@@ -16,7 +16,8 @@ import {
 import type { Repositories } from '@/data/repositories';
 import type { RepositoryDeps } from '@/data/repositories/deps';
 import { clearSearchIndex, insertIntoSearchIndex } from '@/data/repositories/searchIndex';
-import { CardState, type DictionaryId } from '@/domain/models';
+import { GERMAN_ENGLISH_NAME, GERMAN_ENGLISH_WORDS } from '@/data/devData/germanEnglish';
+import { CardState, type DictionaryId, type TagId } from '@/domain/models';
 import { termKeys } from '@/domain/termKeys';
 
 export const SEED_DICTIONARY_NAME = 'Seed (dev)';
@@ -69,6 +70,11 @@ export interface DevTools {
    * no other word uses; everything else stays. Returns the number of words removed.
    */
   removeSeed(): Promise<number>;
+  /**
+   * Creates the German – English test dictionary (150 words, tags word / verb / adjective, both
+   * directions). Does nothing if it exists. Returns the number of words created.
+   */
+  createGermanEnglish(): Promise<number>;
   counts(): Promise<TableCounts>;
   benchmark(runs?: number): Promise<BenchmarkResult[]>;
 }
@@ -336,6 +342,33 @@ export function createDevTools(
       // Give the space back to the phone (the file held 50,000 words).
       db.run(sql`VACUUM`);
       return removed;
+    },
+
+    async createGermanEnglish() {
+      const existing = await repositories.dictionaries.list();
+      if (existing.some((d) => d.name === GERMAN_ENGLISH_NAME)) return 0;
+      const dictionary = await repositories.dictionaries.create({
+        name: GERMAN_ENGLISH_NAME,
+        termLang: 'de',
+        meaningLang: 'en',
+        bothDirections: true,
+      });
+      const tagIds = new Map<string, TagId>();
+      for (const word of GERMAN_ENGLISH_WORDS) {
+        const created = await repositories.words.create({
+          dictionaryId: dictionary.id,
+          term: word.term,
+          translation: word.meaning,
+          partOfSpeech: word.partOfSpeech,
+        });
+        let tagId = tagIds.get(word.tag);
+        if (!tagId) {
+          tagId = (await repositories.tags.getOrCreate(word.tag)).id;
+          tagIds.set(word.tag, tagId);
+        }
+        await repositories.tags.setWordTags(created.id, [tagId]);
+      }
+      return GERMAN_ENGLISH_WORDS.length;
     },
 
     async wipe() {

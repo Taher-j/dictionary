@@ -98,3 +98,26 @@ describe('devTools.removeSeed', () => {
     expect(await devTools.removeSeed()).toBe(0);
   });
 });
+
+describe('devTools.createGermanEnglish', () => {
+  it('creates 150 tagged words in both directions, once', async () => {
+    const { devTools, repos } = setup();
+    expect(await devTools.createGermanEnglish()).toBe(150);
+    expect(await devTools.createGermanEnglish()).toBe(0);
+    const [dictionary] = await repos.dictionaries.list();
+    expect(dictionary).toMatchObject({
+      name: 'German – English',
+      termLang: 'de',
+      meaningLang: 'en',
+      bothDirections: true,
+    });
+    expect((await repos.tags.listWithCounts()).map((t) => [t.name, t.wordCount])).toEqual([
+      ['adjective', 40],
+      ['verb', 50],
+      ['word', 60],
+    ]);
+    const [strasse] = await repos.words.search('die Straße');
+    expect(strasse).toMatchObject({ term: 'die Straße', translation: 'street / road' });
+    expect(await devTools.counts()).toMatchObject({ words: 150, cards: 300 });
+  });
+});
