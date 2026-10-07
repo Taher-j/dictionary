@@ -53,11 +53,15 @@ describe('TagRepository', () => {
 
   it('renames a tag; every word shows the new name', async () => {
     const { repos, word } = await setup();
+    const other = await repos.words.create({ dictionaryId: word.dictionaryId, term: 'Baum' });
     const tag = await repos.tags.getOrCreate('verbs');
     await repos.tags.setWordTags(word.id, [tag.id]);
+    await repos.tags.setWordTags(other.id, [tag.id]);
     const result = await repos.tags.rename(tag.id, ' Verben ');
     expect(result).toMatchObject({ ok: true, tag: { name: 'Verben', nameNorm: 'verben' } });
-    expect((await repos.tags.listForWord(word.id)).map((t) => t.name)).toEqual(['Verben']);
+    for (const id of [word.id, other.id]) {
+      expect((await repos.tags.listForWord(id)).map((t) => t.name)).toEqual(['Verben']);
+    }
     // Changing only the case is a rename, not a conflict.
     expect(await repos.tags.rename(tag.id, 'VERBEN')).toMatchObject({ ok: true });
   });

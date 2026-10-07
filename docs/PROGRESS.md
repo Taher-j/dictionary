@@ -11,7 +11,7 @@ and add one line to the session log.
 | 1 — Data layer | Done (iOS unverified) |
 | 2 — Dictionaries and words | Done (iOS unverified) |
 | 4 — Review core | Done (iOS unverified) |
-| 3 — Search, tags and filters | In progress |
+| 3 — Search, tags and filters | Done (iOS unverified) |
 | 5 — Backup and restore (MVP gate) | Not started |
 | 6 — Import, export and bulk edits | Not started |
 | 7 — Practice modes | Not started |
@@ -22,7 +22,7 @@ and add one line to the session log.
 
 (Rows are in build order: 4 comes before 3.)
 
-## Current milestone: 3 — Search, tags and filters (in progress)
+## Current milestone: 3 — Search, tags and filters (done; next: plan Milestone 5)
 
 Milestone 4's checklist is in git history (`docs/PROGRESS.md` before Milestone 3). Plan approved on
 2026-10-07 with: filters without search text list the matching words grouped by dictionary;
@@ -30,21 +30,39 @@ renaming a tag to an existing name offers a merge (see `08-decisions.md`).
 
 ### Tasks
 
-- [ ] `WordQuery` gains `tagId`, `status`, `starred`; grouped sort for filtered lists
-- [ ] `WordRepository.list` and `search` apply every filter (status joins `cards`), with tests
-- [ ] `TagRepository`: merge, delete removes word links, rename conflict, prefix suggestions, counts
-- [ ] Library: debounced search, results grouped by dictionary, filter chips and picker sheets
+- [x] `WordQuery` gains `tagId`, `status`, `starred`; grouped sort for filtered lists
+- [x] `WordRepository.list` and `search` apply every filter (status joins `cards`), with tests
+- [x] `TagRepository`: merge, delete removes word links, rename conflict, prefix suggestions, counts
+- [x] Library: debounced search, results grouped by dictionary, filter chips and picker sheets
       (filter state in Zustand)
-- [ ] Word detail: tag chips, "+ tag" with autocomplete, remove a tag
-- [ ] Settings → Tags: list with word counts, rename, merge, delete
-- [ ] Seeder adds tags
-- [ ] Phone: search-as-you-type at 50,000 words (dev build)
+- [x] Word detail: tag chips, "+ tag" with autocomplete, remove a tag
+- [x] Settings → Tags: list with word counts, rename, merge, delete
+- [x] Seeder adds tags (and stars); the benchmark times filtered queries
+- [x] Phone: search-as-you-type at 50,000 words (dev build)
 
 ### Done-when checks
 
-- [ ] Search-as-you-type shows no visible lag at 50,000 words
-- [ ] Filter combinations are covered by repository tests
-- [ ] Renaming or merging a tag updates every word that had it
+- [x] Search-as-you-type shows no visible lag at 50,000 words: screen recording while typing
+      "kabe", results follow each letter, previous results stay until the next arrive; search
+      14-17 ms with filters (phone benchmark, 2026-10-07)
+- [x] Filter combinations are covered by repository tests (144 combinations against a reference
+      filter, plus search and grouped paging)
+- [x] Renaming or merging a tag updates every word that had it (repository tests)
+
+### Checked on the phone (dev build, 2026-10-07)
+
+Search grouped by dictionary, Status filter (Young), adding a tag on word detail, suggestion
+chip, "Show words with this tag" opens Library filtered, Settings → Tags list with counts, rename.
+Not tried on the phone: merge and delete (one tag only; covered by tests), rename conflict.
+Broadest status filter (mature, grouped) takes 81 ms; see `03-data-model.md`.
+
+### Next steps
+
+1. **Q2 must be answered before Milestone 5**: final Android package / iOS bundle id and URL
+   scheme (`08-decisions.md`).
+2. Plan Milestone 5 — Backup and restore (MVP gate).
+3. The phone runs the dev build with seeded data (50,000 words) next to the owner's "English
+   Arabic" dictionary (7 words, tag "core").
 
 ### Known issues
 
@@ -82,3 +100,4 @@ renaming a tag to an existing name offers a merge (see `08-decisions.md`).
 | 2026-10-05/06 | Milestone 2: Library, dictionary list, quick add, word detail, Inbox, Trash; keyboard-controller | Milestone 4 — Review core (plan first) |
 | 2026-10-06 | M2 wrap-up (keyboard, sheet fix), release build; M4 domain, data and UI, most phone checks | M4 next steps above, then Milestone 3 |
 | 2026-10-07 | M4 phone checks: "I know this", reduced-motion crossfade; fixed seeder memory states and skipped crossfade; Q7 opened | TalkBack session (owner) on the release build, then Milestone 3 |
+| 2026-10-07 | M4 done (TalkBack issue parked). Milestone 3: filters in repositories, tag merge/rename/delete, Library search and chips, word tags, Settings → Tags, seeded tags | Q2, then plan Milestone 5 |

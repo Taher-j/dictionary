@@ -222,10 +222,17 @@ sample, a Japanese sample, and full-width Latin characters (NFKC).
   - Query shape: candidate ids (term prefix `UNION ALL` FTS matches) drive the query, then
     deleted words and other dictionaries are filtered out. Starting from the dictionary index
     instead scans the whole dictionary.
+- **Filters** (Milestone 3) add conditions to the same queries: tag through `word_tags`, status on
+  the joined recognition card (mirrors "Derived status" below), starred, incomplete. Measured on
+  the owner's phone with 50,000 words (2026-10-07): search with a filter 14-17 ms, a rare tag
+  4 ms; the broadest status filter (mature) 81 ms, because SQLite drives it from `cards` and sorts.
+  Rewriting the card conditions so the scan follows `words_dict_fold` made broad filters about
+  1 ms but filters with few matches 160 ms (full scan), so the bounded plan stays.
 - **Do not use an external-content FTS table.** `words` has a text primary key, so its implicit
   rowid can be renumbered by `VACUUM`, which would corrupt an external-content index.
 - **Sort A-Z by `term_fold`** (places "ä" next to "a" without ICU collation).
-- **Keyset pagination** on `(term_fold, id)`; for "recent" order, on `(created_at, id)`.
+- **Keyset pagination** on `(term_fold, id)`; for "recent" order, on `(created_at, id)`; for
+  filtered lists grouped by dictionary, on `(dictionary_id, term_fold, id)`.
 
 ## Derived status (never stored)
 
