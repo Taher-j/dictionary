@@ -3,7 +3,7 @@
 import { getTableColumns, sql } from 'drizzle-orm';
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core';
 
-import type { SnapshotTarget } from '@/data/db/client';
+import type { SnapshotInfo, SnapshotTarget } from '@/data/db/client';
 import journal from '@/data/db/migrations/meta/_journal.json';
 import {
   cards,
@@ -94,6 +94,10 @@ export interface BackupService {
   snapshotSchemaVersion(path: string): number | null;
   /** Writes a snapshot now (`VACUUM INTO`) and prunes old ones. */
   snapshot(reason: string): void;
+  /** Snapshots, newest first; `restorable` when made with this build's schema version. */
+  listSnapshots(): (SnapshotInfo & { restorable: boolean })[];
+  /** The first launch of a study day takes a snapshot (docs/06-data-safety.md). */
+  snapshotIfNoneSince(since: number): boolean;
 }
 
 export interface BackupDeps {
@@ -274,5 +278,19 @@ export function createBackupService({ db, now, snapshots }: BackupDeps): BackupS
     snapshotSchemaVersion,
 
     snapshot,
+
+    listSnapshots() {
+      return snapshots.list().map((info) => ({
+        ...info,
+        restorable: snapshotSchemaVersion(info.path) === SCHEMA_VERSION,
+      }));
+    },
+
+    snapshotIfNoneSince(since) {
+      const [latest] = snapshots.list();
+      if (latest && latest.createdAt >= since) return false;
+      snapshot('daily');
+      return true;
+    },
   };
 }

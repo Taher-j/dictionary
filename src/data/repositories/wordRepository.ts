@@ -35,6 +35,8 @@ export interface WordRepository {
   search(text: string, query?: WordFilter & { limit?: number }): Promise<WordListItem[]>;
   /** Words without a translation and definition (the Inbox badge). */
   countIncomplete(): Promise<number>;
+  /** Words created, edited or deleted after `since` (all words when null): the backup reminder. */
+  countChangedSince(since: number | null): Promise<number>;
   findDuplicates(dictionaryId: DictionaryId, keys: TermKeys): Promise<DuplicateMatch[]>;
   create(input: NewWord): Promise<Word>;
   update(id: WordId, patch: WordPatch): Promise<Word>;
@@ -324,6 +326,15 @@ export function createWordRepository({ db, now, newId }: RepositoryDeps): WordRe
         .select({ n: sql<number>`count(*)` })
         .from(words)
         .where(and(isNull(words.deletedAt), incomplete))
+        .all();
+      return Number(row?.n ?? 0);
+    },
+
+    async countChangedSince(since) {
+      const [row] = db
+        .select({ n: sql<number>`count(*)` })
+        .from(words)
+        .where(since === null ? undefined : sql`${words.updatedAt} > ${since}`)
         .all();
       return Number(row?.n ?? 0);
     },

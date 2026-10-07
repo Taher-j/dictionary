@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 
+import { createBackupService } from '@/data/backup';
 import { openAppDatabase } from '@/data/db/client';
 import { createDevTools } from '@/data/devTools';
 import { createRepositories } from '@/data/repositories';
 import type { DataServices } from '@/data/RepositoriesProvider';
+import { studyDayStart } from '@/domain/studyDay';
 import { purgeCutoff } from '@/domain/trash';
 import { applyPreferences, promptRestart } from '@/features/settings/preferences';
 import { systemClock } from '@/lib/clock';
@@ -21,7 +23,11 @@ let startup: Promise<{ services: DataServices; restartNeeded: boolean }> | null 
 
 async function start(): Promise<{ services: DataServices; restartNeeded: boolean }> {
   const now = systemClock;
-  const { db } = await openAppDatabase(createSnapshotStore(now));
+  const snapshots = createSnapshotStore(now);
+  const { db } = await openAppDatabase(snapshots);
+  const backup = createBackupService({ db, now, snapshots });
+  // First launch of the study day, and before the trash purge deletes anything for good.
+  backup.snapshotIfNoneSince(studyDayStart(now()));
   const deps = { db, now, newId: createIdGenerator({ now, randomBytes: secureRandomBytes }) };
   const repositories = createRepositories(deps);
   // Before the splash screen hides, so the first screen already has the right theme and language.
@@ -30,7 +36,7 @@ async function start(): Promise<{ services: DataServices; restartNeeded: boolean
   // Trashed words and dictionaries are deleted for good after 30 days.
   await repositories.trash.purge(purgeCutoff(now()));
   const devTools = __DEV__ ? createDevTools(deps, repositories, () => performance.now()) : null;
-  return { services: { repositories, devTools }, restartNeeded };
+  return { services: { repositories, backup, devTools }, restartNeeded };
 }
 
 /** Opens and migrates the database, then creates the repositories. */

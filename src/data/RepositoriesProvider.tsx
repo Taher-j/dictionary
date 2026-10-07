@@ -1,10 +1,12 @@
 import { createContext, useContext, type ReactNode } from 'react';
 
+import type { BackupService } from '@/data/backup';
 import type { DevTools } from '@/data/devTools';
 import type { Repositories } from '@/data/repositories';
 
 export interface DataServices {
   repositories: Repositories;
+  backup: BackupService;
   /** Only in development builds. */
   devTools: DevTools | null;
 }
@@ -29,6 +31,10 @@ function useDataServices(): DataServices {
 
 export function useRepositories(): Repositories {
   return useDataServices().repositories;
+}
+
+export function useBackupService(): BackupService {
+  return useDataServices().backup;
 }
 
 export function useDevToolsService(): DevTools | null {

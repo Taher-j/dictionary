@@ -1,5 +1,6 @@
 import { Directory, File, Paths } from 'expo-file-system';
 
+import type { EpochMs } from '@/domain/models';
 import type { Clock } from '@/lib/clock';
 
 /** Snapshots kept on the device; older ones are deleted (docs/06-data-safety.md). */
@@ -16,6 +17,28 @@ function uriToPath(uri: string): string {
   return decodeURIComponent(uri.replace(/^file:\/\//, ''));
 }
 
+export interface SnapshotInfo {
+  /** Plain path, for SQLite (ATTACH). */
+  path: string;
+  createdAt: EpochMs;
+  /** `daily`, `pre-migrate`, `pre-restore`, ... */
+  reason: string;
+  size: number | null;
+}
+
+const NAME = /^snapshot-(\d+)-(.+)\.db$/;
+
+function listSnapshotFiles(): File[] {
+  const dir = snapshotDirectory();
+  if (!dir.exists) return [];
+  return dir
+    .list()
+    .filter((entry): entry is File => entry instanceof File && NAME.test(entry.name))
+    .sort((a, b) => b.name.localeCompare(a.name));
+}
+
+export type SnapshotStore = ReturnType<typeof createSnapshotStore>;
+
 /** Snapshot files named `snapshot-<epoch ms>-<reason>.db`, so names sort by age. */
 export function createSnapshotStore(now: Clock) {
   return {
@@ -27,13 +50,23 @@ export function createSnapshotStore(now: Clock) {
     },
 
     prune(): void {
-      const dir = snapshotDirectory();
-      if (!dir.exists) return;
-      const snapshots = dir
-        .list()
-        .filter((entry): entry is File => entry instanceof File && entry.name.startsWith(PREFIX))
-        .sort((a, b) => b.name.localeCompare(a.name));
-      for (const old of snapshots.slice(SNAPSHOTS_TO_KEEP)) old.delete();
+      for (const old of listSnapshotFiles().slice(SNAPSHOTS_TO_KEEP)) old.delete();
+    },
+
+    /** Newest first. */
+    list(): SnapshotInfo[] {
+      return listSnapshotFiles().flatMap((file) => {
+        const match = NAME.exec(file.name);
+        if (!match?.[1] || !match[2]) return [];
+        return [
+          {
+            path: uriToPath(file.uri),
+            createdAt: Number(match[1]),
+            reason: match[2],
+            size: file.size,
+          },
+        ];
+      });
     },
   };
 }

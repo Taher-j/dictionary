@@ -9,12 +9,23 @@ import type { AppDatabase } from '@/data/db/types';
 
 export const DATABASE_NAME = 'dictionary.db';
 
+export interface SnapshotInfo {
+  /** Absolute file-system path (not a URI). */
+  path: string;
+  createdAt: number;
+  /** `daily`, `pre-migrate`, `pre-restore`, ... */
+  reason: string;
+  size: number | null;
+}
+
 /** Where snapshots go. Implemented in src/services (file system access lives there). */
 export interface SnapshotTarget {
   /** Absolute file-system path (not a URI) for a new snapshot file. */
   newSnapshotPath(reason: string): string;
   /** Deletes old snapshots beyond the retention limit. */
   prune(): void;
+  /** Existing snapshots, newest first. */
+  list(): SnapshotInfo[];
 }
 
 export interface OpenedDatabase {

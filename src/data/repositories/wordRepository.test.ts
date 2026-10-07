@@ -485,3 +485,22 @@ describe('filters', () => {
     expect(blocks).toHaveLength(2);
   });
 });
+
+describe('countChangedSince', () => {
+  it('counts words created, edited or deleted after a time (all when null)', async () => {
+    const { repos, de, tick, time } = await setup();
+    const a = await repos.words.create({ dictionaryId: de.id, term: 'a' });
+    const b = await repos.words.create({ dictionaryId: de.id, term: 'b' });
+    await repos.words.create({ dictionaryId: de.id, term: 'c' });
+    const backupAt = tick(1000);
+    expect(await repos.words.countChangedSince(backupAt)).toBe(0);
+    expect(await repos.words.countChangedSince(null)).toBe(3);
+
+    tick(1000);
+    await repos.words.update(a.id, { translation: 'x' });
+    await repos.words.softDelete([b.id]);
+    await repos.words.create({ dictionaryId: de.id, term: 'd' });
+    expect(await repos.words.countChangedSince(backupAt)).toBe(3);
+    expect(time()).toBeGreaterThan(backupAt);
+  });
+});

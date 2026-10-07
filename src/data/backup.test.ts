@@ -34,16 +34,23 @@ function dump(ctx: TestContext) {
   return out;
 }
 
-function snapshotTarget(dir: string): SnapshotTarget & { paths: string[] } {
+function snapshotTarget(dir: string, now: () => number): SnapshotTarget & { paths: string[] } {
   const paths: string[] = [];
+  const created: number[] = [];
   return {
     paths,
     newSnapshotPath(reason) {
       const file = path.join(dir, `snapshot-${paths.length}-${reason}.db`);
       paths.push(file);
+      created.push(now());
       return file;
     },
     prune() {},
+    list() {
+      return paths
+        .map((p, i) => ({ path: p, createdAt: created[i] ?? 0, reason: 'x', size: null }))
+        .reverse();
+    },
   };
 }
 
@@ -56,7 +63,7 @@ afterEach(() => {
 });
 
 function backupService(ctx: TestContext) {
-  const snapshots = snapshotTarget(dir);
+  const snapshots = snapshotTarget(dir, ctx.time);
   return { snapshots, service: createBackupService({ db: ctx.db, now: ctx.time, snapshots }) };
 }
 
@@ -273,5 +280,20 @@ describe('snapshots', () => {
     const notDb = path.join(dir, 'not.db');
     fs.writeFileSync(notDb, 'hello');
     expect(service.snapshotSchemaVersion(notDb)).toBeNull();
+  });
+});
+
+describe('daily snapshot', () => {
+  it('is taken once per study day', () => {
+    const ctx = createTestContext();
+    const { service, snapshots } = backupService(ctx);
+    const dayStart = ctx.time() - 3_600_000;
+    expect(service.snapshotIfNoneSince(dayStart)).toBe(true);
+    ctx.tick(60_000);
+    expect(service.snapshotIfNoneSince(dayStart)).toBe(false);
+    ctx.tick(86_400_000);
+    expect(service.snapshotIfNoneSince(dayStart + 86_400_000)).toBe(true);
+    expect(snapshots.paths).toHaveLength(2);
+    expect(service.listSnapshots().every((s) => s.restorable)).toBe(true);
   });
 });
