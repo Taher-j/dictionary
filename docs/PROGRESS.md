@@ -71,8 +71,7 @@ Broadest status filter (mature, grouped) takes 81 ms; see `03-data-model.md`.
 
 ### Next steps
 
-1. **Q2 must be answered before Milestone 5**: final Android package / iOS bundle id and URL
-   scheme (`08-decisions.md`).
+1. Q2 (final package id and URL scheme) deferred to release by the owner; placeholders stay.
 2. Plan Milestone 5 — Backup and restore (MVP gate).
 3. The phone runs the dev build with seeded data (50,000 words) next to the owner's "English
    Arabic" dictionary (7 words, tag "core").

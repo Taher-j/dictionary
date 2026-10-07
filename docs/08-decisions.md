@@ -7,7 +7,7 @@ Append new decisions at the bottom of the log with a date. Do not rewrite histor
 | # | Question | Needed by |
 | --- | --- | --- |
 | Q1 | Final app name. Placeholder in use (see below). The display name can change at any time. | Milestone 11 at the latest |
-| Q2 | Final Android package / iOS bundle identifier and URL scheme. Placeholders in use (see below). | **Before Milestone 5** |
+| Q2 | Final Android package / iOS bundle identifier and URL scheme. Placeholders in use (see below). | Before release (Milestone 11); deferred by the owner on 2026-10-07 |
 | Q7 | A card whose memory state ts-fsrs rejects (for example from a bad import) currently crashes the review screen. Skip it and report it, or repair it (reset to New)? Only seeded data has hit this so far (fixed 2026-10-07). | Milestone 6 (import) |
 
 ## Placeholders in use
@@ -89,3 +89,4 @@ name can still change freely afterwards.
 | 2026-10-07 | UI languages: English, German, Arabic. Arabic is not offered in Settings; it is used when the device (or Android/iOS per-app) language is Arabic and Language is System | Owner |
 | 2026-10-07 | Layout direction follows the resolved UI language and is forced (`I18nManager.forceRTL`); a change asks the user to restart (no `expo-updates`). Expo Router gets it through `LocaleProvider` | React Native on Android reads RTL from the system language list, so an Arabic per-app language gave a left-to-right layout |
 | 2026-10-07 | German and Arabic strings were written by Claude; Arabic needs a native speaker's review before release | Owner to arrange (Milestone 11) |
+| 2026-10-07 | Q2 deferred to release: the placeholder package stays through Milestone 5 | Owner. Consequence: data entered under the placeholder moves to the final identifier by backup and restore (built in Milestone 5) |

@@ -1,7 +1,7 @@
 import type { ConfigContext, ExpoConfig } from 'expo/config';
 
 // Placeholders (see docs/08-decisions.md, Q1 and Q2). Change them here and nowhere else.
-// The bundle id must be final before Milestone 5.
+// The bundle id is final before release (Q2, deferred); data moves across by backup and restore.
 const APP_NAME = 'Dictionary';
 const SLUG = 'dictionary-app';
 const SCHEME = 'dictionaryapp';

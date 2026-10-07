@@ -207,7 +207,8 @@ version + upgrade chain, `src/services/files.ts`, snapshot service, migration fi
 
 **Before starting:** the owner fixes the final Android package and iOS bundle identifier (Q2).
 After this milestone the app holds real data, and on Android a different package name is a
-different app: its data only moves across by backup and restore.
+different app: its data only moves across by backup and restore. (Deferred to release by the
+owner, 2026-10-07: the move will go through backup and restore.)
 
 **Done when**
 
