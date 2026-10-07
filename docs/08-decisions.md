@@ -83,3 +83,5 @@ name can still change freely afterwards.
 | 2026-10-06 | `Scheduler.preview` returns `intervalMs`; the label is formatted in the UI | Domain code has no `t()`; labels need plural forms |
 | 2026-10-06 | Removing a meaning no longer suspends the card; queues skip words without a meaning, and only the user suspends | Owner: an edit must not undo the user's own suspend. No schema change |
 | 2026-10-06 | Suspend lives in the session header menu ("I know this") and word detail's menu (Suspend / Unsuspend) | Owner |
+| 2026-10-07 | Library: with filters set and no search text, the matching words replace the dictionary list, grouped by dictionary (keyset on `dictionary_id, term_fold, id`, served by `words_dict_fold`) | Owner (Milestone 3 plan): otherwise the chips do nothing until the user types |
+| 2026-10-07 | Renaming a tag to a name another tag already has (case and spacing ignored) offers "Merge into …" instead of failing | Owner (Milestone 3 plan) |

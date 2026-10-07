@@ -11,7 +11,7 @@ and add one line to the session log.
 | 1 — Data layer | Done (iOS unverified) |
 | 2 — Dictionaries and words | Done (iOS unverified) |
 | 4 — Review core | Done (iOS unverified) |
-| 3 — Search, tags and filters | Not started |
+| 3 — Search, tags and filters | In progress |
 | 5 — Backup and restore (MVP gate) | Not started |
 | 6 — Import, export and bulk edits | Not started |
 | 7 — Practice modes | Not started |
@@ -22,52 +22,29 @@ and add one line to the session log.
 
 (Rows are in build order: 4 comes before 3.)
 
-## Current milestone: 4 — Review core (in progress; pick up at "Next steps")
+## Current milestone: 3 — Search, tags and filters (in progress)
 
-Milestone 2's checklist is in git history (`docs/PROGRESS.md` before Milestone 4). Plan approved on
-2026-10-06 with: no automatic suspend, 10 s per card for the estimate, Suspend in the session menu
-and word detail. Also decided: review cards are due by study day (see `08-decisions.md`).
+Milestone 4's checklist is in git history (`docs/PROGRESS.md` before Milestone 3). Plan approved on
+2026-10-07 with: filters without search text list the matching words grouped by dictionary;
+renaming a tag to an existing name offers a merge (see `08-decisions.md`).
 
 ### Tasks
 
-- [x] `ts-fsrs` 5.4.2; `scheduler.ts`, `studyDay.ts`, `queue.ts` (`buildQueue`), `session.ts`
-      (`sessionReducer`), `intervals.ts`, with tests
-- [x] `ReviewRepository`: queue candidates, Today summary, introduced-today count, due tomorrow,
-      sessions, transactional `answer`, `undoAnswer`; `cards.setSuspendedForWord`
-- [x] Removing a meaning no longer suspends the card; status is "incomplete" without a meaning
-- [x] Today: review card (counts, estimate, Start, "All caught up" + next review), Recently added
-- [x] Review session `/review`: flip (crossfade with reduced motion), ratings with intervals,
-      progress, undo, edit, "I know this"; summary with missed words, due tomorrow, Keep going
-- [x] Settings: new words per day, cards per session; word detail: next review, Suspend/Unsuspend
-- [x] Zustand session store (ids only)
+- [ ] `WordQuery` gains `tagId`, `status`, `starred`; grouped sort for filtered lists
+- [ ] `WordRepository.list` and `search` apply every filter (status joins `cards`), with tests
+- [ ] `TagRepository`: merge, delete removes word links, rename conflict, prefix suggestions, counts
+- [ ] Library: debounced search, results grouped by dictionary, filter chips and picker sheets
+      (filter state in Zustand)
+- [ ] Word detail: tag chips, "+ tag" with autocomplete, remove a tag
+- [ ] Settings → Tags: list with word counts, rename, merge, delete
+- [ ] Seeder adds tags
+- [ ] Phone: search-as-you-type at 50,000 words (dev build)
 
 ### Done-when checks
 
-- [x] All "Required tests" in `04-learning-system.md` pass (`pnpm check`: 97 tests)
-- [x] Killing the app mid-session loses no answered card: answered Good, force-stopped 0.3 s later;
-      card and log row were in the database (adb, 2026-10-06)
-- [x] A full session with a screen reader: labels checked in the UI dump ("Good, next review in 10
-      minutes", answer read as the meaning); owner ran a TalkBack session on the release build
-      (2026-10-07). It works; see the known issue about reading the revealed answer
-
-### Checked on the phone (dev build, 2026-10-06)
-
-Reveal and flip, rating intervals for a new card (1 min / 6 min / 10 min / 8 d), Again requeues,
-Undo restores the card (state New, reps 0) and deletes the log, summary, Today counts after
-relaunch, "All caught up" with next review time, word detail "Young" + next review date, Suspend
-and Unsuspend from word detail keep the schedule.
-
-2026-10-07: "I know this" suspends the card (no log, schedule kept) and moves on; with Remove
-animations on, the reveal crossfades (screen recording); the normal flip is unchanged. Found and
-fixed: seeded cards had memory states ts-fsrs rejects (crash on reveal); Reanimated skipped the
-crossfade under reduced motion.
-
-### Next steps
-
-1. Owner: one full session with TalkBack.
-2. Done 2026-10-07: data deleted, release build installed (not debuggable, opens on the
-   first-launch sheet with an empty database). Do the TalkBack session on it.
-3. Tick the last done-when check, set Milestone 4 to Done, plan Milestone 3.
+- [ ] Search-as-you-type shows no visible lag at 50,000 words
+- [ ] Filter combinations are covered by repository tests
+- [ ] Renaming or merging a tag updates every word that had it
 
 ### Known issues
 
