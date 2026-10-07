@@ -69,6 +69,14 @@ export default function RootLayout() {
                   options={{ headerShown: true, title: t('trash.title') }}
                 />
                 <Stack.Screen
+                  name="tags/index"
+                  options={{ headerShown: true, title: t('tags.title') }}
+                />
+                <Stack.Screen
+                  name="tags/[id]"
+                  options={{ presentation: 'formSheet', sheetAllowedDetents: 'fitToContents' }}
+                />
+                <Stack.Screen
                   name="dev"
                   options={{ presentation: 'modal', title: t('dev.title') }}
                 />
