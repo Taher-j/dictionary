@@ -208,7 +208,10 @@
       "reviewLogs": "Review logs: {{done, number}} of {{total, number}}"
     },
     "timing": "Median {{median}} ms, max {{max}} ms, {{rows, number}} rows",
-    "removeSeed": "Remove seeded data (keeps your own words)"
+    "removeSeed": "Remove seeded data (keeps your own words)",
+    "voicesTitle": "Speech voices",
+    "voices": "{{lang}}: {{count, number}} voices",
+    "speakTest": "Speak {{lang}}"
   },
   "review": {
     "revealHint": "Double tap to reveal the answer",

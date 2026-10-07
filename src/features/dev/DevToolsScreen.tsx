@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { useDevTools } from '@/features/dev/useDevTools';
+import { SpeechCheck } from '@/features/dev/SpeechCheck';
 import { Button } from '@/ui/Button';
 import { Screen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
@@ -56,6 +57,8 @@ export function DevToolsScreen() {
       ) : null}
       {dev.busy && !dev.progress ? <Text>{t('dev.working')}</Text> : null}
       {dev.error ? <Text tone="danger">{dev.error.message}</Text> : null}
+
+      <SpeechCheck />
 
       {dev.results?.map((result) => (
         <View key={result.name} style={styles.result}>
