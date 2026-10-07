@@ -29,13 +29,14 @@ Milestone 5's checklist is in git history (`docs/PROGRESS.md` before Milestone 7
 
 ### Tasks — part A
 
-- [ ] `expo-speech`; dev build; prototype: TTS voices for en/de/ar, typing (umlauts, Arabic)
-- [ ] Both directions per dictionary: recall cards, toggle in the dictionary menu, queue filter
-- [ ] Sibling rule in the queue
-- [ ] Modes: `grade()` for typing and multiple choice, distractor picker, mode choice per card,
+- [x] `expo-speech`; dev build; TTS voices on the S24 Ultra: en 52, de 9, ar 9; speech plays
+      (Google TTS). Typing umlauts and Arabic on the Samsung keyboard: owner to check
+- [x] Both directions per dictionary: recall cards, toggle in the dictionary menu, queue filter
+- [x] Sibling rule in the queue
+- [x] Modes: `grade()` for typing and multiple choice, distractor picker, mode choice per card,
       "Flashcards only" setting
-- [ ] Review screen renders all three modes; one rating per card per session
-- [ ] Tests: grading, distractors, mode choice, sibling rule
+- [x] Review screen renders all three modes; one rating per card per session
+- [x] Tests: grading, distractors, mode choice, sibling rule
 
 ### Tasks — part B
 
@@ -45,8 +46,9 @@ Milestone 5's checklist is in git history (`docs/PROGRESS.md` before Milestone 7
 
 ### Done-when checks
 
-- [ ] Each mode's `grade()` has unit tests, including alternatives and one-edit tolerance
-- [ ] A 20-card session mixes all three modes
+- [x] Each mode's `grade()` has unit tests, including alternatives and one-edit tolerance
+- [x] A 20-card session mixes all three modes: test (`practiceSession.test.ts`) and phone
+      (2026-10-07, seeded data: 16 choice, 11 flashcard, 2 typing in one session)
 - [ ] A test asserts that free practice leaves every card's state and due date unchanged
 
 ### Known issues
