@@ -31,6 +31,8 @@ export const trashKeys = {
 export const tagKeys = {
   all: ['tags'] as const,
   lists: () => [...tagKeys.all, 'list'] as const,
+  withCounts: () => [...tagKeys.all, 'withCounts'] as const,
+  suggestions: (text: string) => [...tagKeys.all, 'suggestions', text] as const,
   forWord: (wordId: WordId) => [...tagKeys.all, 'word', wordId] as const,
 };
 

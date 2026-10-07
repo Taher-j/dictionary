@@ -62,7 +62,57 @@
     "countsWithIncomplete_one": "{{count, number}} word, {{incomplete, number}} without meaning",
     "countsWithIncomplete_other": "{{count, number}} words, {{incomplete, number}} without meaning",
     "moveUp": "Move {{name}} up",
-    "moveDown": "Move {{name}} down"
+    "moveDown": "Move {{name}} down",
+    "searchLabel": "Search words",
+    "searchPlaceholder": "Search all dictionaries",
+    "clearSearch": "Clear search",
+    "noResults": "No words match.",
+    "searchLimit_one": "Showing the first {{count, number}} match. Type more to narrow it down.",
+    "searchLimit_other": "Showing the first {{count, number}} matches. Type more to narrow them down."
+  },
+  "filters": {
+    "dictionary": "Dictionary",
+    "tag": "Tag",
+    "status": "Status",
+    "starred": "Starred",
+    "incomplete": "Needs meaning",
+    "anyDictionary": "Any dictionary",
+    "anyTag": "Any tag",
+    "anyStatus": "Any status",
+    "clear": "Clear filters",
+    "opensList": "Opens a list",
+    "noTags": "No tags yet",
+    "valueLabel": "{{filter}}: {{value}}"
+  },
+  "tags": {
+    "title": "Tags",
+    "add": "Add tag",
+    "name": "Tag name",
+    "placeholder": "Type a tag",
+    "create": "Create “{{name}}”",
+    "chipLabel": "Tag {{name}}",
+    "chipHint": "Opens tag options",
+    "removeFromWord": "Remove from this word",
+    "showWords": "Show words with this tag",
+    "empty": "No tags yet. Add tags on a word's page.",
+    "wordCount_one": "{{count, number}} word",
+    "wordCount_other": "{{count, number}} words",
+    "rename": "Rename",
+    "renameTitle": "Rename tag",
+    "mergeInto": "Merge into another tag",
+    "mergeEmpty": "There is no other tag to merge into.",
+    "mergeTitle": "Merge {{source}} into {{target}}?",
+    "mergeBody_one": "{{count, number}} word gets {{target}}. {{source}} is deleted.",
+    "mergeBody_other": "{{count, number}} words get {{target}}. {{source}} is deleted.",
+    "merge": "Merge",
+    "merged": "Merged {{source}} into {{target}}",
+    "conflictTitle": "{{name}} already exists",
+    "conflictBody": "Merge {{source}} into {{name}}? Every word with {{source}} gets {{name}}.",
+    "delete": "Delete tag",
+    "deleteTitle": "Delete {{name}}?",
+    "deleteBody_one": "It is removed from {{count, number}} word. The word itself stays.",
+    "deleteBody_other": "It is removed from {{count, number}} words. The words themselves stay.",
+    "deleted": "Deleted {{name}}"
   },
   "dictionaryForm": {
     "newTitle": "New dictionary",
@@ -220,6 +270,7 @@
   },
   "settings": {
     "dailyNewLimit": "New words per day",
-    "sessionSize": "Cards per session"
+    "sessionSize": "Cards per session",
+    "tags": "Tags"
   }
 }

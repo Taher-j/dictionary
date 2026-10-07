@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@/ui/Text';
@@ -27,6 +27,7 @@ export function ActionSheet({ visible, title, actions, onClose }: ActionSheetPro
   const { t } = useTranslation();
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
+  const { height } = useWindowDimensions();
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -48,26 +49,32 @@ export function ActionSheet({ visible, title, actions, onClose }: ActionSheetPro
             {title}
           </Text>
         ) : null}
-        {actions.map((action) => (
-          <Pressable
-            key={action.key}
-            accessibilityRole="button"
-            accessibilityState={{ selected: action.selected }}
-            onPress={() => {
-              onClose();
-              action.onPress();
-            }}
-            style={({ pressed }) => [styles.action, pressed && { backgroundColor: colors.surface }]}
-          >
-            <Text
-              variant="label"
-              tone={action.destructive ? 'danger' : 'default'}
-              style={action.selected && styles.selected}
+        {/* Long lists (tags) scroll; Cancel stays visible below them. */}
+        <ScrollView style={{ maxHeight: height * 0.6 }}>
+          {actions.map((action) => (
+            <Pressable
+              key={action.key}
+              accessibilityRole="button"
+              accessibilityState={{ selected: action.selected }}
+              onPress={() => {
+                onClose();
+                action.onPress();
+              }}
+              style={({ pressed }) => [
+                styles.action,
+                pressed && { backgroundColor: colors.surface },
+              ]}
             >
-              {action.selected ? t('common.selectedItem', { label: action.label }) : action.label}
-            </Text>
-          </Pressable>
-        ))}
+              <Text
+                variant="label"
+                tone={action.destructive ? 'danger' : 'default'}
+                style={action.selected && styles.selected}
+              >
+                {action.selected ? t('common.selectedItem', { label: action.label }) : action.label}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
         <Pressable
           accessibilityRole="button"
           onPress={onClose}

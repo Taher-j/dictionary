@@ -9,16 +9,27 @@ export interface ChipProps {
   selected: boolean;
   onPress: () => void;
   accessibilityHint?: string;
+  /** `radio` in a single-choice group (default), `checkbox` for a toggle, `button` to open a picker. */
+  role?: 'radio' | 'checkbox' | 'button';
+  /** Defaults to the label. */
+  accessibilityLabel?: string;
 }
 
 /** A selectable pill. Selection shows as fill and a check-like weight change, not colour alone. */
-export function Chip({ label, selected, onPress, accessibilityHint }: ChipProps) {
+export function Chip({
+  label,
+  selected,
+  onPress,
+  accessibilityHint,
+  role = 'radio',
+  accessibilityLabel = label,
+}: ChipProps) {
   const { colors } = useTheme();
   return (
     <Pressable
-      accessibilityRole="radio"
-      accessibilityState={{ checked: selected }}
-      accessibilityLabel={label}
+      accessibilityRole={role}
+      accessibilityState={role === 'button' ? { selected } : { checked: selected }}
+      accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
       onPress={onPress}
       style={({ pressed }) => [

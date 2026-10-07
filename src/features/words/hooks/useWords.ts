@@ -1,28 +1,38 @@
 import {
+  keepPreviousData,
   useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
   type QueryClient,
 } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
 
-import { cardKeys, dictionaryKeys, reviewKeys, trashKeys, wordKeys } from '@/data/queryKeys';
+import {
+  cardKeys,
+  dictionaryKeys,
+  reviewKeys,
+  tagKeys,
+  trashKeys,
+  wordKeys,
+} from '@/data/queryKeys';
 import { useRepositories } from '@/data/RepositoriesProvider';
 import type {
   DictionaryId,
   NewWord,
   WordCursor,
+  WordFilter,
   WordId,
   WordPatch,
   WordQuery,
 } from '@/domain/models';
 import { termKeys } from '@/domain/termKeys';
 import { hasMeaning, wordStatus } from '@/domain/wordStatus';
+import { useDebouncedValue } from '@/lib/useDebouncedValue';
 
-/** Word writes change lists, counts, cards, review counts and the trash. Local data, so refetching is cheap. */
+/** Word writes change lists, counts, cards, review counts, tag counts and the trash. Local data, so refetching is cheap. */
 export function invalidateWordData(queryClient: QueryClient) {
   void queryClient.invalidateQueries({ queryKey: wordKeys.all });
+  void queryClient.invalidateQueries({ queryKey: tagKeys.all });
   void queryClient.invalidateQueries({ queryKey: dictionaryKeys.all });
   void queryClient.invalidateQueries({ queryKey: cardKeys.all });
   void queryClient.invalidateQueries({ queryKey: trashKeys.all });
@@ -37,6 +47,17 @@ export function useWordList(query: WordQuery) {
     queryFn: ({ pageParam }) => words.list(query, pageParam),
     initialPageParam: null as WordCursor | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
+  });
+}
+
+/** Search across dictionaries; the previous results stay visible while the next query runs. */
+export function useWordSearch(text: string, filter: WordFilter, enabled: boolean) {
+  const { words } = useRepositories();
+  return useQuery({
+    queryKey: wordKeys.search(text, filter),
+    queryFn: () => words.search(text, filter),
+    enabled,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -62,13 +83,7 @@ export function useIncompleteCount() {
 /** Duplicate matches for a term while it is typed (debounced). */
 export function useDuplicates(dictionaryId: DictionaryId | null, term: string, delayMs = 250) {
   const { words } = useRepositories();
-  const [debounced, setDebounced] = useState(term);
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(term), delayMs);
-    return () => clearTimeout(timer);
-  }, [term, delayMs]);
-
-  const trimmed = debounced.trim();
+  const trimmed = useDebouncedValue(term, delayMs).trim();
   return useQuery({
     queryKey: wordKeys.duplicates(dictionaryId ?? ('' as DictionaryId), trimmed),
     queryFn: () =>
