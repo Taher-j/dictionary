@@ -11,6 +11,7 @@ import { ActionSheet } from '@/ui/ActionSheet';
 import { ListRow } from '@/ui/ListRow';
 import { Screen } from '@/ui/Screen';
 import { StepperRow } from '@/ui/StepperRow';
+import { SwitchRow } from '@/ui/SwitchRow';
 import { Text } from '@/ui/Text';
 import { spacing } from '@/ui/tokens';
 
@@ -64,6 +65,12 @@ export function SettingsScreen() {
         max={200}
         step={5}
         onChange={(value) => setSetting.mutate({ key: 'sessionSize', value })}
+      />
+      <SwitchRow
+        label={t('settings.flashcardsOnly')}
+        hint={t('settings.flashcardsOnlyHint')}
+        value={settings.flashcardsOnly}
+        onChange={(value) => setSetting.mutate({ key: 'flashcardsOnly', value })}
       />
       <ListRow title={t('backup.title')} onPress={() => router.push('/backup')} />
       <ListRow title={t('settings.tags')} onPress={() => router.push('/tags')} />

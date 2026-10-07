@@ -166,7 +166,9 @@
     "dailyReviewOff": "تضمين في المراجعة اليومية",
     "deleteTitle": "حذف {{name}}؟",
     "deleteBody": "سينتقل القاموس وكلماته إلى سلة المحذوفات. يمكنك استعادتها خلال 30 يومًا.",
-    "deleted": "نُقل {{name}} إلى سلة المحذوفات"
+    "deleted": "نُقل {{name}} إلى سلة المحذوفات",
+    "bothDirectionsOff": "التدرّب في الاتجاهين",
+    "bothDirectionsOn": "التدرّب في اتجاه واحد فقط"
   },
   "add": {
     "title": "إضافة سريعة",
@@ -362,7 +364,21 @@
       "dueTomorrow_other": "{{count, number}} بطاقة مستحقة غدًا",
       "missed": "كلمات لم تعرفها",
       "editHint": "يفتح الكلمة لتعديلها"
-    }
+    },
+    "recallPrompt": "ما الكلمة؟",
+    "typeLabel": "إجابتك",
+    "typePlaceholder": "اكتب الكلمة",
+    "check": "تحقّق",
+    "continue": "متابعة",
+    "correct": "صحيح",
+    "almost": "قريب. تُكتب هكذا: {{answer}}",
+    "wrong": "الإجابة: {{answer}}",
+    "iWasRight": "كنت محقًا",
+    "chooseMeaning": "اختر المعنى",
+    "chooseWord": "اختر الكلمة",
+    "optionCorrect": "{{option}}، الإجابة الصحيحة",
+    "optionWrong": "{{option}}، إجابتك، خاطئة",
+    "notQuite": "ليس تمامًا"
   },
   "settings": {
     "dailyNewLimit": "كلمات جديدة يوميًا",
@@ -382,7 +398,9 @@
       "de": "Deutsch"
     },
     "restartTitle": "أعد تشغيل التطبيق",
-    "restartBody": "أغلق التطبيق وافتحه مجددًا لتغيير اتجاه التخطيط."
+    "restartBody": "أغلق التطبيق وافتحه مجددًا لتغيير اتجاه التخطيط.",
+    "flashcardsOnly": "البطاقات فقط",
+    "flashcardsOnlyHint": "بلا كتابة ولا اختيار من متعدد في المراجعات."
   },
   "backup": {
     "title": "النسخ الاحتياطي والاستعادة",

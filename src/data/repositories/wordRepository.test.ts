@@ -504,3 +504,26 @@ describe('countChangedSince', () => {
     expect(time()).toBeGreaterThan(backupAt);
   });
 });
+
+describe('choicePool', () => {
+  it('samples other words with a meaning from the same dictionary', async () => {
+    const { repos, de, en } = await setup();
+    const me = await repos.words.create({
+      dictionaryId: de.id,
+      term: 'Haus',
+      translation: 'house',
+    });
+    for (const term of ['a', 'b', 'c']) {
+      await repos.words.create({ dictionaryId: de.id, term, definition: `${term} def` });
+    }
+    await repos.words.create({ dictionaryId: de.id, term: 'leer' });
+    await repos.words.create({ dictionaryId: en.id, term: 'other', translation: 'x' });
+    const gone = await repos.words.create({ dictionaryId: de.id, term: 'weg', translation: 'y' });
+    await repos.words.softDelete([gone.id]);
+
+    const pool = await repos.words.choicePool(de.id, me.id);
+    expect(pool.map((w) => w.term).sort()).toEqual(['a', 'b', 'c']);
+    expect(pool.find((w) => w.term === 'a')?.meaning).toBe('a def');
+    expect(await repos.words.choicePool(de.id, me.id, 2)).toHaveLength(2);
+  });
+});

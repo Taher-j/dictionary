@@ -10,7 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import type { Word } from '@/domain/models';
+import type { CardDirection, Word } from '@/domain/models';
 import { Text } from '@/ui/Text';
 import { radius, spacing } from '@/ui/tokens';
 import { useTheme } from '@/ui/useTheme';
@@ -19,15 +19,17 @@ const FLIP_MS = 300;
 
 export interface FlashCardProps {
   word: Word;
+  /** Recognition: the term, then the meaning. Recall: the meaning, then the term. */
+  direction: CardDirection;
   revealed: boolean;
   onReveal: () => void;
 }
 
 /**
- * Recognition card: the term, then the meaning. Tap anywhere to reveal. Flips; with reduced
- * motion it crossfades. Screen readers hear the term and a hint, then focus moves to the answer.
+ * A flashcard in either direction. Tap anywhere to reveal. Flips; with reduced motion it
+ * crossfades. Screen readers hear the prompt and a hint, then focus moves to the answer.
  */
-export function FlashCard({ word, revealed, onReveal }: FlashCardProps) {
+export function FlashCard({ word, direction, revealed, onReveal }: FlashCardProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const reduceMotion = useReducedMotion();
@@ -69,6 +71,8 @@ export function FlashCard({ word, revealed, onReveal }: FlashCardProps) {
   );
 
   const faceStyle = [styles.face, { backgroundColor: colors.surface, borderColor: colors.border }];
+  const recall = direction === 'recall';
+  const meaning = answerLabel(word);
 
   return (
     <View style={styles.container}>
@@ -82,11 +86,16 @@ export function FlashCard({ word, revealed, onReveal }: FlashCardProps) {
           style={faceStyle}
           onPress={onReveal}
           accessibilityRole="button"
-          accessibilityLabel={word.term}
+          accessibilityLabel={recall ? `${t('review.recallPrompt')} ${meaning}` : word.term}
           accessibilityHint={t('review.revealHint')}
         >
-          <Text variant="title" style={styles.center}>
-            {word.term}
+          {recall ? (
+            <Text variant="caption" tone="muted" style={styles.center}>
+              {t('review.recallPrompt')}
+            </Text>
+          ) : null}
+          <Text variant={recall ? 'meaning' : 'title'} style={styles.center}>
+            {recall ? meaning : word.term}
           </Text>
           <Text variant="caption" tone="muted" style={styles.center}>
             {t('review.tapToReveal')}
@@ -102,10 +111,18 @@ export function FlashCard({ word, revealed, onReveal }: FlashCardProps) {
       >
         <View style={faceStyle}>
           <ScrollView contentContainerStyle={styles.back}>
-            <Text variant="heading" style={styles.center}>
-              {word.term}
-            </Text>
-            <View ref={answerRef} accessible accessibilityLabel={answerLabel(word)}>
+            {recall ? (
+              <View ref={answerRef} accessible accessibilityLabel={word.term}>
+                <Text variant="title" style={styles.center}>
+                  {word.term}
+                </Text>
+              </View>
+            ) : (
+              <Text variant="heading" style={styles.center}>
+                {word.term}
+              </Text>
+            )}
+            <View ref={recall ? undefined : answerRef} accessible accessibilityLabel={meaning}>
               {word.translation ? (
                 <Text variant="meaning" style={styles.center}>
                   {word.translation}

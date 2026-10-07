@@ -110,6 +110,13 @@ export function DictionaryScreen({ id }: { id: DictionaryId }) {
               : t('dictionary.dailyReviewOff'),
             onPress: () => d && update.mutate({ id, patch: { inDailyReview: !d.inDailyReview } }),
           },
+          {
+            key: 'directions',
+            label: d?.bothDirections
+              ? t('dictionary.bothDirectionsOn')
+              : t('dictionary.bothDirectionsOff'),
+            onPress: () => d && update.mutate({ id, patch: { bothDirections: !d.bothDirections } }),
+          },
           { key: 'delete', label: t('common.delete'), destructive: true, onPress: confirmDelete },
         ]}
       />

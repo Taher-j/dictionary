@@ -38,6 +38,12 @@ export interface WordRepository {
   countIncomplete(): Promise<number>;
   /** Words created, edited or deleted after `since` (all words when null): the backup reminder. */
   countChangedSince(since: number | null): Promise<number>;
+  /** A random sample of other words with a meaning in the dictionary: multiple-choice options. */
+  choicePool(
+    dictionaryId: DictionaryId,
+    excludeWordId: WordId,
+    limit?: number,
+  ): Promise<ChoiceWord[]>;
   findDuplicates(dictionaryId: DictionaryId, keys: TermKeys): Promise<DuplicateMatch[]>;
   create(input: NewWord): Promise<Word>;
   update(id: WordId, patch: WordPatch): Promise<Word>;
@@ -46,6 +52,14 @@ export interface WordRepository {
 }
 
 export const DEFAULT_PAGE_SIZE = 50;
+export const CHOICE_POOL_SIZE = 40;
+
+export interface ChoiceWord {
+  id: WordId;
+  term: string;
+  meaning: string;
+  partOfSpeech: string | null;
+}
 export const SEARCH_LIMIT = 50;
 
 type WordRow = typeof words.$inferSelect;
@@ -352,6 +366,35 @@ export function createWordRepository({ db, now, newId }: RepositoryDeps): WordRe
         .where(since === null ? undefined : sql`${words.updatedAt} > ${since}`)
         .all();
       return Number(row?.n ?? 0);
+    },
+
+    async choicePool(dictionaryId, excludeWordId, limit = CHOICE_POOL_SIZE) {
+      return db
+        .select({
+          id: words.id,
+          term: words.term,
+          translation: words.translation,
+          definition: words.definition,
+          partOfSpeech: words.partOfSpeech,
+        })
+        .from(words)
+        .where(
+          and(
+            eq(words.dictionaryId, dictionaryId),
+            isNull(words.deletedAt),
+            sql`${words.id} <> ${excludeWordId}`,
+            or(isNotNull(words.translation), isNotNull(words.definition)),
+          ),
+        )
+        .orderBy(sql`random()`)
+        .limit(limit)
+        .all()
+        .map((w) => ({
+          id: w.id as WordId,
+          term: w.term,
+          meaning: w.translation ?? w.definition ?? '',
+          partOfSpeech: w.partOfSpeech,
+        }));
     },
 
     async findDuplicates(dictionaryId, keys) {

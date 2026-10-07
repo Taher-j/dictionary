@@ -134,7 +134,9 @@
     "dailyReviewOff": "In tägliche Wiederholung aufnehmen",
     "deleteTitle": "{{name}} löschen?",
     "deleteBody": "Das Wörterbuch und seine Wörter kommen in den Papierkorb. Du kannst sie 30 Tage lang wiederherstellen.",
-    "deleted": "{{name}} in den Papierkorb verschoben"
+    "deleted": "{{name}} in den Papierkorb verschoben",
+    "bothDirectionsOff": "Beide Richtungen üben",
+    "bothDirectionsOn": "Nur eine Richtung üben"
   },
   "add": {
     "title": "Schnell hinzufügen",
@@ -270,7 +272,21 @@
       "dueTomorrow_other": "{{count, number}} Karten morgen fällig",
       "missed": "Nicht gewusst",
       "editHint": "Öffnet das Wort zum Bearbeiten"
-    }
+    },
+    "recallPrompt": "Wie heißt das Wort?",
+    "typeLabel": "Deine Antwort",
+    "typePlaceholder": "Wort eingeben",
+    "check": "Prüfen",
+    "continue": "Weiter",
+    "correct": "Richtig",
+    "almost": "Fast. Geschrieben wird es: {{answer}}",
+    "wrong": "Die Antwort ist: {{answer}}",
+    "iWasRight": "Ich lag richtig",
+    "chooseMeaning": "Wähle die Bedeutung",
+    "chooseWord": "Wähle das Wort",
+    "optionCorrect": "{{option}}, richtige Antwort",
+    "optionWrong": "{{option}}, deine Antwort, falsch",
+    "notQuite": "Nicht ganz"
   },
   "settings": {
     "dailyNewLimit": "Neue Wörter pro Tag",
@@ -290,7 +306,9 @@
       "de": "Deutsch"
     },
     "restartTitle": "App neu starten",
-    "restartBody": "Schließe die App und öffne sie wieder, um die Leserichtung zu wechseln."
+    "restartBody": "Schließe die App und öffne sie wieder, um die Leserichtung zu wechseln.",
+    "flashcardsOnly": "Nur Karteikarten",
+    "flashcardsOnlyHint": "Kein Tippen und keine Auswahlfragen in Wiederholungen."
   },
   "backup": {
     "title": "Sichern und wiederherstellen",

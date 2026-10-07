@@ -10,6 +10,8 @@ export interface Settings {
   dailyNewLimit: number;
   sessionSize: number;
   hapticsEnabled: boolean;
+  /** Review shows flashcards only: no typing or multiple choice. */
+  flashcardsOnly: boolean;
   lastBackupAt: EpochMs | null;
   /** Preselected in quick add. */
   lastDictionaryId: DictionaryId | null;
@@ -23,6 +25,7 @@ export const defaultSettings: Settings = {
   dailyNewLimit: 10,
   sessionSize: 20,
   hapticsEnabled: true,
+  flashcardsOnly: false,
   lastBackupAt: null,
   lastDictionaryId: null,
 };

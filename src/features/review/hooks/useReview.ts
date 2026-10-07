@@ -3,7 +3,8 @@ import { router } from 'expo-router';
 
 import { cardKeys, reviewKeys, wordKeys } from '@/data/queryKeys';
 import { useRepositories } from '@/data/RepositoriesProvider';
-import type { CardId, Rating, WordId } from '@/domain/models';
+import type { Card, CardId, EpochMs, Rating, ReviewLogId, Word, WordId } from '@/domain/models';
+import { buildChoice, seededRandom, type Choice } from '@/domain/practice/choice';
 import { buildQueue } from '@/domain/queue';
 import { createScheduler } from '@/domain/scheduler';
 import { useReviewSessionStore } from '@/features/review/sessionStore';
@@ -84,12 +85,38 @@ export function useReviewCard(cardId: CardId | null) {
   });
 }
 
-/** Saves the answer first; the session advances only after the write succeeded. */
+/** What the session needs to move on after a saved answer. */
+export interface SavedAnswer {
+  logId: ReviewLogId;
+  rating: Rating;
+  due: EpochMs;
+  now: EpochMs;
+}
+
+/** Moves the session on after a saved answer (typing and choice wait for "Continue"). */
+export function advanceSession(saved: SavedAnswer) {
+  const { logId, rating, due, now } = saved;
+  useReviewSessionStore
+    .getState()
+    .dispatch({ type: 'answered', logId, rating, due, now }, reviewClock());
+}
+
+/**
+ * Saves the answer first; the session advances only after the write succeeded. With
+ * `advance: false` the caller shows feedback and calls `advanceSession` itself.
+ */
 export function useAnswer() {
   const { reviews } = useRepositories();
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ cardId, rating }: { cardId: CardId; rating: Rating }) => {
+    mutationFn: async ({
+      cardId,
+      rating,
+    }: {
+      cardId: CardId;
+      rating: Rating;
+      advance?: boolean;
+    }): Promise<SavedAnswer> => {
       const { sessionId, shownAt } = useReviewSessionStore.getState();
       if (!sessionId) throw new Error('No active review session.');
       const now = reviewClock();
@@ -97,13 +124,64 @@ export function useAnswer() {
         { cardId, sessionId, rating, durationMs: Math.max(0, now - shownAt) },
         (prev) => scheduler.apply(prev, rating, now),
       );
-      return { ...result, rating, now };
+      return { logId: result.logId, rating, due: result.card.due, now };
     },
-    onSuccess: ({ logId, card, rating, now }) => {
-      useReviewSessionStore
-        .getState()
-        .dispatch({ type: 'answered', logId, rating, due: card.due, now }, reviewClock());
+    onSuccess: (saved, { advance = true }) => {
+      if (advance) advanceSession(saved);
       invalidateReviewData(queryClient);
+    },
+  });
+}
+
+/**
+ * "I was right" after a typed answer: the saved rating is replaced by Good (undo, then answer),
+ * so still exactly one rating per card reaches the scheduler.
+ */
+export function useOverrideAnswer() {
+  const { reviews } = useRepositories();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ cardId, saved }: { cardId: CardId; saved: SavedAnswer }) => {
+      const { sessionId } = useReviewSessionStore.getState();
+      if (!sessionId) throw new Error('No active review session.');
+      await reviews.undoAnswer(saved.logId);
+      const result = await reviews.answer(
+        { cardId, sessionId, rating: 3, durationMs: null },
+        (prev) => scheduler.apply(prev, 3, saved.now),
+      );
+      return {
+        logId: result.logId,
+        rating: 3,
+        due: result.card.due,
+        now: saved.now,
+      } as SavedAnswer;
+    },
+    onSuccess: () => invalidateReviewData(queryClient),
+  });
+}
+
+/** Multiple-choice options for a card, stable for the card (seeded by its id). Null: too few words. */
+export function useChoice(card: Card | null, word: Word | null) {
+  const { words } = useRepositories();
+  return useQuery({
+    queryKey: [...cardKeys.detail(card?.id ?? ('' as CardId)), 'choice'],
+    enabled: card !== null && word !== null,
+    staleTime: Infinity,
+    queryFn: async (): Promise<Choice | null> => {
+      if (!card || !word) return null;
+      const pool = await words.choicePool(word.dictionaryId, word.id);
+      const side = (w: { term: string; meaning: string }) =>
+        card.direction === 'recall' ? w.term : w.meaning;
+      const correct = {
+        wordId: word.id,
+        text: side({ term: word.term, meaning: word.translation ?? word.definition ?? '' }),
+        partOfSpeech: word.partOfSpeech,
+      };
+      return buildChoice(
+        correct,
+        pool.map((w) => ({ wordId: w.id, text: side(w), partOfSpeech: w.partOfSpeech })),
+        seededRandom(card.id),
+      );
     },
   });
 }

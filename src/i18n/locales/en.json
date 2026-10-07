@@ -134,7 +134,9 @@
     "dailyReviewOff": "Include in daily review",
     "deleteTitle": "Delete {{name}}?",
     "deleteBody": "The dictionary and its words move to the trash. You can restore them for 30 days.",
-    "deleted": "{{name}} moved to the trash"
+    "deleted": "{{name}} moved to the trash",
+    "bothDirectionsOff": "Practice both directions",
+    "bothDirectionsOn": "Practice one direction only"
   },
   "add": {
     "title": "Quick add",
@@ -270,7 +272,21 @@
       "dueTomorrow_other": "{{count, number}} cards due tomorrow",
       "missed": "Missed words",
       "editHint": "Opens the word to edit it"
-    }
+    },
+    "recallPrompt": "What is the word?",
+    "typeLabel": "Your answer",
+    "typePlaceholder": "Type the word",
+    "check": "Check",
+    "continue": "Continue",
+    "correct": "Correct",
+    "almost": "Almost. It is spelled: {{answer}}",
+    "wrong": "The answer is: {{answer}}",
+    "iWasRight": "I was right",
+    "chooseMeaning": "Choose the meaning",
+    "chooseWord": "Choose the word",
+    "optionCorrect": "{{option}}, correct answer",
+    "optionWrong": "{{option}}, your answer, wrong",
+    "notQuite": "Not quite"
   },
   "settings": {
     "dailyNewLimit": "New words per day",
@@ -290,7 +306,9 @@
       "de": "Deutsch"
     },
     "restartTitle": "Restart the app",
-    "restartBody": "Close and reopen the app to switch the layout direction."
+    "restartBody": "Close and reopen the app to switch the layout direction.",
+    "flashcardsOnly": "Flashcards only",
+    "flashcardsOnlyHint": "No typing or multiple choice in reviews."
   },
   "backup": {
     "title": "Backup and restore",
