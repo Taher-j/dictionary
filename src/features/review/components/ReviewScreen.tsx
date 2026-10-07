@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { CardState, type Rating } from '@/domain/models';
-import { pickMode } from '@/domain/practice/mode';
+import type { Choice } from '@/domain/practice/choice';
+import { pickMode, type PracticeMode } from '@/domain/practice/mode';
 import { currentCard, isFinished } from '@/domain/session';
 import { ChoiceCard } from '@/features/review/components/ChoiceCard';
 import { FlashCard } from '@/features/review/components/FlashCard';
@@ -50,6 +51,13 @@ export function ReviewScreen() {
   const override = useOverrideAnswer();
   // An answer saved by typing or choice, waiting for "Continue".
   const [saved, setSaved] = useState<SavedAnswer | null>(null);
+  // Mode and options are fixed when a card appears: saving an answer changes the card's state,
+  // which must not switch the mode (or reshuffle the options) while feedback is shown.
+  const [attempt, setAttempt] = useState<{
+    key: string;
+    mode: PracticeMode;
+    choice: Choice | null;
+  } | null>(null);
   const undo = useUndoAnswer();
   const suspend = useSetWordSuspended();
   const end = useEndReview();
@@ -76,12 +84,17 @@ export function ReviewScreen() {
   // Choice is only possible for new and learning cards; wait for its options before deciding.
   const needsChoice =
     !flashcardsOnly && data !== null && data !== undefined && data.card.state !== CardState.Review;
-  const mode =
+  // Per-attempt state resets for every card shown, including a requeued repeat.
+  const attemptKey = `${current?.cardId ?? ''}-${session.answered}`;
+  const nextMode =
     data && (!needsChoice || choice.isSuccess)
       ? pickMode(data.card, { flashcardsOnly, choiceAvailable: Boolean(choice.data) })
       : null;
-  // Per-attempt state resets for every card shown, including a requeued repeat.
-  const attemptKey = `${current?.cardId ?? ''}-${session.answered}`;
+  if (nextMode && attempt?.key !== attemptKey) {
+    setAttempt({ key: attemptKey, mode: nextMode, choice: choice.data ?? null });
+  }
+  const mode = attempt?.key === attemptKey ? attempt.mode : null;
+  const options = attempt?.key === attemptKey ? attempt.choice : null;
 
   const save = async (rating: Rating) => {
     if (!current) return;
@@ -210,7 +223,7 @@ export function ReviewScreen() {
           />
         </ScrollView>
       ) : null}
-      {mode === 'choice' && data && choice.data ? (
+      {mode === 'choice' && data && options ? (
         <ScrollView contentContainerStyle={styles.card}>
           <ChoiceCard
             key={attemptKey}
@@ -220,7 +233,7 @@ export function ReviewScreen() {
                 ? [data.word.translation, data.word.definition].filter(Boolean).join('. ')
                 : data.word.term
             }
-            choice={choice.data}
+            choice={options}
             busy={busy}
             onAnswer={save}
             onContinue={continueSession}

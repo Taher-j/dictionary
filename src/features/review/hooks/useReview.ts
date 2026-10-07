@@ -164,7 +164,8 @@ export function useOverrideAnswer() {
 export function useChoice(card: Card | null, word: Word | null) {
   const { words } = useRepositories();
   return useQuery({
-    queryKey: [...cardKeys.detail(card?.id ?? ('' as CardId)), 'choice'],
+    // Not under cardKeys: answers invalidate those, and the options must not change mid-card.
+    queryKey: ['choice', card?.id ?? ''],
     enabled: card !== null && word !== null,
     staleTime: Infinity,
     queryFn: async (): Promise<Choice | null> => {

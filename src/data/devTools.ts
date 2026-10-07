@@ -224,7 +224,7 @@ export function createDevTools(
             for (const direction of directions) {
               const roll = rand();
               const state =
-                roll < 0.2 ? CardState.New : roll < 0.35 ? CardState.Learning : CardState.Review;
+                roll < 0.2 ? CardState.New : roll < 0.21 ? CardState.Learning : CardState.Review;
               const scheduledDays = state === CardState.Review ? 1 + Math.floor(rand() * 200) : 0;
               // Memory state as ts-fsrs produces it: 0/0 for a new card, stability > 0 once
               // reviewed. Anything else is rejected as an invalid memory state.
@@ -241,12 +241,12 @@ export function createDevTools(
                 wordId: id,
                 direction,
                 state,
-                // Review cards: due across the past and coming months. Learning cards: spread
-                // over the next two days with a few due now, as in real use (they come first in
-                // a session, so thousands due at once would make every session learning only).
+                // Review cards: due across the past and coming months. Learning cards are few (1%)
+                // and spread over the next week, as in real use: they come first in a session, so
+                // thousands due at once would make every session learning only.
                 due:
                   state === CardState.Learning
-                    ? at + Math.round((rand() * 48 - 0.05) * 3_600_000)
+                    ? at + Math.round((rand() * 168 - 1) * 3_600_000)
                     : at + Math.floor((rand() - 0.3) * scheduledDays) * DAY_MS,
                 stability,
                 difficulty: state === CardState.New ? 0 : 1 + rand() * 9,
