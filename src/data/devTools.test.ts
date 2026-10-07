@@ -34,7 +34,7 @@ describe('devTools', () => {
     const counts = await devTools.counts();
     expect(counts).toMatchObject({ dictionaries: 1, words: 1200, reviewLogs: 1100 });
     expect(counts.cards).toBeGreaterThan(400);
-    expect(counts.cards).toBeLessThan(800);
+    expect(counts.cards).toBeLessThan(1000); // recognition for every word with a meaning, recall for about half
     expect(progress).toEqual([
       'words:500',
       'words:1000',

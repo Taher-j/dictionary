@@ -177,7 +177,11 @@ export function createDevTools(
       const rand = random(options.seed ?? 42);
       const meaningRatio = options.meaningRatio ?? 0.9;
       const at = now();
-      const dictionary = await repositories.dictionaries.create({ name: SEED_DICTIONARY_NAME });
+      // Both directions, so reviews can mix all three modes (typing needs recall cards).
+      const dictionary = await repositories.dictionaries.create({
+        name: SEED_DICTIONARY_NAME,
+        bothDirections: true,
+      });
       const cardIds: string[] = [];
       const seedTags = [];
       for (const [name, share] of SEED_TAGS) {
@@ -214,33 +218,38 @@ export function createDevTools(
             if (rand() < tag.share) tagRows.push({ wordId: id, tagId: tag.id });
           }
           if (meaningful) {
-            const roll = rand();
-            const state =
-              roll < 0.2 ? CardState.New : roll < 0.35 ? CardState.Learning : CardState.Review;
-            const scheduledDays = state === CardState.Review ? 1 + Math.floor(rand() * 200) : 0;
-            // Memory state as ts-fsrs produces it: 0/0 for a new card, stability > 0 once reviewed.
-            // Anything else is rejected as an invalid memory state.
-            const stability =
-              state === CardState.Learning
-                ? 0.1 + rand() * 2
-                : state === CardState.Review
-                  ? scheduledDays
-                  : 0;
-            const cardId = newId();
-            cardIds.push(cardId);
-            cardRows.push({
-              id: cardId,
-              wordId: id,
-              direction: 'recognition',
-              state,
-              due: at + Math.floor((rand() - 0.3) * scheduledDays) * DAY_MS,
-              stability,
-              difficulty: state === CardState.New ? 0 : 1 + rand() * 9,
-              scheduledDays,
-              reps: state === CardState.New ? 0 : 1 + Math.floor(rand() * 10),
-              lastReview: state === CardState.New ? null : at - Math.floor(rand() * 30) * DAY_MS,
-              updatedAt: createdAt,
-            });
+            // Recall cards for about half the words; the rest wait as if created later.
+            const directions =
+              rand() < 0.5 ? (['recognition', 'recall'] as const) : (['recognition'] as const);
+            for (const direction of directions) {
+              const roll = rand();
+              const state =
+                roll < 0.2 ? CardState.New : roll < 0.35 ? CardState.Learning : CardState.Review;
+              const scheduledDays = state === CardState.Review ? 1 + Math.floor(rand() * 200) : 0;
+              // Memory state as ts-fsrs produces it: 0/0 for a new card, stability > 0 once
+              // reviewed. Anything else is rejected as an invalid memory state.
+              const stability =
+                state === CardState.Learning
+                  ? 0.1 + rand() * 2
+                  : state === CardState.Review
+                    ? scheduledDays
+                    : 0;
+              const cardId = newId();
+              cardIds.push(cardId);
+              cardRows.push({
+                id: cardId,
+                wordId: id,
+                direction,
+                state,
+                due: at + Math.floor((rand() - 0.3) * scheduledDays) * DAY_MS,
+                stability,
+                difficulty: state === CardState.New ? 0 : 1 + rand() * 9,
+                scheduledDays,
+                reps: state === CardState.New ? 0 : 1 + Math.floor(rand() * 10),
+                lastReview: state === CardState.New ? null : at - Math.floor(rand() * 30) * DAY_MS,
+                updatedAt: createdAt,
+              });
+            }
           }
         }
 
