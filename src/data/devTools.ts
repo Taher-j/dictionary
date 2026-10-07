@@ -241,7 +241,13 @@ export function createDevTools(
                 wordId: id,
                 direction,
                 state,
-                due: at + Math.floor((rand() - 0.3) * scheduledDays) * DAY_MS,
+                // Review cards: due across the past and coming months. Learning cards: spread
+                // over the next two days with a few due now, as in real use (they come first in
+                // a session, so thousands due at once would make every session learning only).
+                due:
+                  state === CardState.Learning
+                    ? at + Math.round((rand() * 48 - 0.05) * 3_600_000)
+                    : at + Math.floor((rand() - 0.3) * scheduledDays) * DAY_MS,
                 stability,
                 difficulty: state === CardState.New ? 0 : 1 + rand() * 9,
                 scheduledDays,
