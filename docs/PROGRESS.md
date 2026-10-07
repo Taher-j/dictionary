@@ -10,7 +10,7 @@ and add one line to the session log.
 | 0 — Project setup | Done (iOS unverified) |
 | 1 — Data layer | Done (iOS unverified) |
 | 2 — Dictionaries and words | Done (iOS unverified) |
-| 4 — Review core | In progress (code done; device checks left) |
+| 4 — Review core | Done (iOS unverified) |
 | 3 — Search, tags and filters | Not started |
 | 5 — Backup and restore (MVP gate) | Not started |
 | 6 — Import, export and bulk edits | Not started |
@@ -46,8 +46,9 @@ and word detail. Also decided: review cards are due by study day (see `08-decisi
 - [x] All "Required tests" in `04-learning-system.md` pass (`pnpm check`: 97 tests)
 - [x] Killing the app mid-session loses no answered card: answered Good, force-stopped 0.3 s later;
       card and log row were in the database (adb, 2026-10-06)
-- [ ] A full session with a screen reader: labels checked in the UI dump ("Good, next review in 10
-      minutes", answer read as the meaning); a full TalkBack session needs the owner
+- [x] A full session with a screen reader: labels checked in the UI dump ("Good, next review in 10
+      minutes", answer read as the meaning); owner ran a TalkBack session on the release build
+      (2026-10-07). It works; see the known issue about reading the revealed answer
 
 ### Checked on the phone (dev build, 2026-10-06)
 
@@ -70,6 +71,9 @@ crossfade under reduced motion.
 
 ### Known issues
 
+- TalkBack: after the reveal the answer is not read correctly (owner, 2026-10-07, English → Arabic
+  dictionary). Not investigated; likely the Arabic meaning read by the English voice. Parked by
+  the owner; revisit in Milestone 10 (accessibility).
 - Developer tools: "Delete all data" runs without a confirmation (dev builds only). A stray tap
   wiped the seeded data on 2026-10-07.
 - In quick add with the keyboard closed, a toast (for example "moved to the trash" after deleting
