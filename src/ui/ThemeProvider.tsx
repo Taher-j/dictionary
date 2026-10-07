@@ -10,7 +10,7 @@ interface ThemeProviderProps {
   children: ReactNode;
 }
 
-/** Follows the system colour scheme. A user override from settings arrives with the data layer. */
+/** Follows the colour scheme; the Theme setting overrides it through `Appearance.setColorScheme`. */
 export function ThemeProvider({ children }: ThemeProviderProps) {
   const theme = useColorScheme() === 'dark' ? darkTheme : lightTheme;
   const base = theme.scheme === 'dark' ? DarkTheme : DefaultTheme;

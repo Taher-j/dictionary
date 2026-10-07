@@ -271,6 +271,21 @@
   "settings": {
     "dailyNewLimit": "New words per day",
     "sessionSize": "Cards per session",
-    "tags": "Tags"
+    "tags": "Tags",
+    "appearance": "Appearance",
+    "theme": "Theme",
+    "themeOption": {
+      "system": "System",
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "language": "Language",
+    "languageOption": {
+      "system": "System",
+      "en": "English",
+      "de": "Deutsch"
+    },
+    "restartTitle": "Restart the app",
+    "restartBody": "Close and reopen the app to switch the layout direction."
   }
 }
