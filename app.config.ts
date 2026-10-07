@@ -40,7 +40,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         imageWidth: 76,
       },
     ],
-    'expo-localization',
+    [
+      'expo-localization',
+      {
+        // UI languages (src/domain/language.ts). Declared so Android and iOS offer per-app language
+        // choice, and so iOS lays the app out right to left when the device language is Arabic.
+        supportedLocales: { ios: ['en', 'de', 'ar'], android: ['en', 'de', 'ar'] },
+      },
+    ],
   ],
   experiments: {
     typedRoutes: true,

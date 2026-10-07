@@ -1,12 +1,12 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { LANGUAGE_PREFERENCES, type LanguagePreference } from '@/domain/language';
 import type { ThemePreference } from '@/domain/settings';
 import { useSetSetting, useSettings } from '@/features/settings/hooks/useSettings';
-import { applyPreferences } from '@/features/settings/preferences';
+import { applyPreferences, promptRestart } from '@/features/settings/preferences';
 import { ActionSheet } from '@/ui/ActionSheet';
 import { ListRow } from '@/ui/ListRow';
 import { Screen } from '@/ui/Screen';
@@ -31,7 +31,7 @@ export function SettingsScreen() {
   const setLanguage = async (language: LanguagePreference) => {
     await setSetting.mutateAsync({ key: 'language', value: language });
     const { restartNeeded } = applyPreferences({ theme: settings.theme, language });
-    if (restartNeeded) Alert.alert(t('settings.restartTitle'), t('settings.restartBody'));
+    if (restartNeeded) promptRestart();
   };
 
   return (
