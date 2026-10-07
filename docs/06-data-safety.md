@@ -16,6 +16,9 @@ code. Three layers protect the data; none needs a server.
 - When: first launch of each study day; before every migration, import and restore.
 - Keep the newest five; delete older ones.
 - Settings lists snapshots with date and size and can restore one (after confirming).
+- A snapshot restore attaches the file and copies its rows into the open database, after a
+  snapshot of the current state. Only snapshots with the current schema version are restorable;
+  older ones are listed as made by an earlier version.
 
 ## Backup file
 
@@ -43,7 +46,9 @@ File name: `dictionary-backup-YYYY-MM-DD.json`.
 ```
 
 - Includes soft-deleted rows (tombstones) so merge works later.
-- Does not include `import_batches` history or snapshots.
+- Does not include `import_batches` history or snapshots; restored words have no `import_batch_id`.
+- Rows use the database's camelCase column names; `src/domain/backup/format.ts` lists them, and
+  a test keeps that list equal to the schema.
 - "Back up now" writes the file to the cache directory and opens the system share sheet.
 - Record `lastBackupAt` in `settings`.
 - The backup screen states plainly that the file is not encrypted.
@@ -52,9 +57,17 @@ File name: `dictionary-backup-YYYY-MM-DD.json`.
 
 1. Pick a file. Validate `format`; reject unknown formats with a clear message.
 2. Upgrade older `formatVersion` files through chained pure functions in
-   `src/domain/backup/upgrade.ts` (`v1 -> v2 -> ...`).
+   `src/domain/backup/upgrade.ts` (`v1 -> v2 -> ...`), one step per version, applied to the header
+   and to each row.
 3. Show a preview: dictionaries, words, reviews, export date.
-4. **Replace** (M5): take a snapshot, then delete all rows and insert the backup inside one transaction.
+4. **Replace** (M5): take a snapshot, then delete all rows and insert the backup inside one
+   transaction (foreign keys checked at commit); any bad row rolls everything back.
+- Files are **read in pieces** (512 KB) and split into rows by `src/domain/backup/splitter.ts`;
+  each row is parsed and checked on its own. The preview reads the file once, the restore again.
+  Reading an 80 MB backup as one string ran Android out of memory (measured 2026-10-07).
+- The start of the file is checked first, so an unrelated file is rejected without reading it.
+  A file that starts like a backup but is cut off is reported as damaged.
+- A restore keeps the latest "last backup" time (before, restored, or the file's export date).
 5. **Merge** (M6): match rows by `id`. The row with the later `updated_at` wins. Tombstones are
    honoured. Review logs are unioned by `id`.
 

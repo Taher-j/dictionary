@@ -90,3 +90,5 @@ name can still change freely afterwards.
 | 2026-10-07 | Layout direction follows the resolved UI language and is forced (`I18nManager.forceRTL`); a change asks the user to restart (no `expo-updates`). Expo Router gets it through `LocaleProvider` | React Native on Android reads RTL from the system language list, so an Arabic per-app language gave a left-to-right layout |
 | 2026-10-07 | German and Arabic strings were written by Claude; Arabic needs a native speaker's review before release | Owner to arrange (Milestone 11) |
 | 2026-10-07 | Q2 deferred to release: the placeholder package stays through Milestone 5 | Owner. Consequence: data entered under the placeholder moves to the final identifier by backup and restore (built in Milestone 5) |
+| 2026-10-07 | Backups are read in pieces and split into rows, not read whole | On the S24 Ultra an 80 MB backup (50,000 words, 200,000 reviews) read as one string failed with OutOfMemoryError. The plan had allowed this switch |
+| 2026-10-07 | Snapshot restore copies rows from the attached snapshot into the open database; same schema version only | Owner (Milestone 5 plan): no app restart needed |

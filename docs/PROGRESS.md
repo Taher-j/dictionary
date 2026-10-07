@@ -12,7 +12,7 @@ and add one line to the session log.
 | 2 — Dictionaries and words | Done (iOS unverified) |
 | 4 — Review core | Done (iOS unverified) |
 | 3 — Search, tags and filters | Done (iOS unverified) |
-| 5 — Backup and restore (MVP gate) | Not started |
+| 5 — Backup and restore (MVP gate) | Done (iOS unverified) |
 | 6 — Import, export and bulk edits | Not started |
 | 7 — Practice modes | Not started |
 | 8 — Statistics and motivation | Not started |
@@ -22,59 +22,50 @@ and add one line to the session log.
 
 (Rows are in build order: 4 comes before 3.)
 
-## Current milestone: 3 — Search, tags and filters (done; next: plan Milestone 5)
+## Current milestone: 5 — Backup and restore (done; owner trial period)
 
-Milestone 4's checklist is in git history (`docs/PROGRESS.md` before Milestone 3). Plan approved on
-2026-10-07 with: filters without search text list the matching words grouped by dictionary;
-renaming a tag to an existing name offers a merge (see `08-decisions.md`).
+Milestone 3's checklist and the between-milestones work are in git history (`docs/PROGRESS.md`
+before Milestone 5). Plan approved on 2026-10-07 with: snapshot restore copies rows into the open
+database (same schema version only); restore reads the whole backup file, measured on the phone.
+Q2 deferred to release.
 
 ### Tasks
 
-- [x] `WordQuery` gains `tagId`, `status`, `starred`; grouped sort for filtered lists
-- [x] `WordRepository.list` and `search` apply every filter (status joins `cards`), with tests
-- [x] `TagRepository`: merge, delete removes word links, rename conflict, prefix suggestions, counts
-- [x] Library: debounced search, results grouped by dictionary, filter chips and picker sheets
-      (filter state in Zustand)
-- [x] Word detail: tag chips, "+ tag" with autocomplete, remove a tag
-- [x] Settings → Tags: list with word counts, rename, merge, delete
-- [x] Seeder adds tags (and stars); the benchmark times filtered queries
-- [x] Phone: search-as-you-type at 50,000 words (dev build)
+- [x] `expo-sharing`, `expo-document-picker`; new dev build
+- [x] `src/domain/backup/`: format, validation, upgrade chain (header and rows), row checks,
+      splitter for reading in pieces
+- [x] Backup writer: table by table, paged by rowid, tombstones included
+- [x] Replace restore: snapshot, one transaction, search index rebuilt, preferences applied
+- [x] `src/services/files.ts`: cache file, share sheet, pick, read in 512 KB pieces
+- [x] Snapshots: daily on first launch of the study day; list and restore in Settings
+- [x] Screens: Backup and restore, first-launch "Restore a backup", Today reminder banner
+- [x] Tests: round trip, malformed/foreign/cut-off files, splitter (any piece size, UTF-8),
+      upgrade chain, reminder rule, migration fixture (`schema-3.db`)
+- [x] Phone: back up, wipe, restore at 50,000 words / 200,000 reviews
 
 ### Done-when checks
 
-- [x] Search-as-you-type shows no visible lag at 50,000 words: screen recording while typing
-      "kabe", results follow each letter, previous results stay until the next arrive; search
-      14-17 ms with filters (phone benchmark, 2026-10-07)
-- [x] Filter combinations are covered by repository tests (144 combinations against a reference
-      filter, plus search and grouped paging)
-- [x] Renaming or merging a tag updates every word that had it (repository tests)
+- [x] Back up, wipe the app, restore: every row count and every card's due date matches. Phone,
+      2026-10-07: counts of all tables and fingerprints of all card schedules, words and review
+      logs identical before and after
+- [x] A Jest round-trip test (serialize -> parse -> restore into an empty database) passes
+- [x] A malformed or foreign JSON file produces a message, not a crash (tests; on the phone: a
+      foreign JSON file, a cut-off backup)
 
-### Checked on the phone (dev build, 2026-10-07)
+### Measured on the phone (50,000 words, 200,000 reviews, 80.5 MB file)
 
-Search grouped by dictionary, Status filter (Young), adding a tag on word detail, suggestion
-chip, "Show words with this tag" opens Library filtered, Settings → Tags list with counts, rename.
-Not tried on the phone: merge and delete (one tag only; covered by tests), rename conflict.
-Broadest status filter (mature, grouped) takes 81 ms; see `03-data-model.md`.
-
-### Between milestones (owner request, 2026-10-07)
-
-- [x] Action sheets: backdrop fades, sheet slides (the dim layer slid up with the sheet)
-- [x] Tab buttons: icon glyph no longer read by TalkBack before the tab name
-- [x] Settings → Appearance: Theme (System / Light / Dark), Language (System / English / Deutsch)
-- [x] German and Arabic translations (Arabic only via the system language); RTL layout for Arabic,
-      headers included; restart prompt when the direction changes
-- Checked on the phone: theme switch and persistence, German live switch (tabs, headers, numbers),
-  Arabic via Android per-app language (layout, headers, lists, word detail), back to English.
-  Not observed: the restart prompt at startup (Android ran the app when the per-app language
-  changed, so the direction was already right). Arabic and German texts need a native check.
-- New dev build installed (native change: supported locales).
+Back up about 23 s; preview (read and check every row) under 10 s; replace restore about 65 s
+with progress; snapshot restore about 4 s. Snapshots of this database are about 106 MB each
+(five kept). Real data is far smaller.
 
 ### Next steps
 
-1. Q2 (final package id and URL scheme) deferred to release by the owner; placeholders stay.
-2. Plan Milestone 5 — Backup and restore (MVP gate).
-3. The phone runs the dev build with seeded data (50,000 words) next to the owner's "English
-   Arabic" dictionary (7 words, tag "core").
+1. **Stop here** (07-milestones.md): the owner uses the app daily for at least two weeks and
+   collects annoyances; that list orders Milestones 6-9.
+2. Before daily use: the phone holds the seeded "Seed (dev)" dictionary next to the owner's
+   words. Delete it (or wipe and start fresh), and install a release build.
+3. Not checked on the phone: "Back up now" through a real share target (the file was copied out
+   with adb), restore on iOS.
 
 ### Known issues
 
@@ -114,3 +105,4 @@ Broadest status filter (mature, grouped) takes 81 ms; see `03-data-model.md`.
 | 2026-10-07 | M4 phone checks: "I know this", reduced-motion crossfade; fixed seeder memory states and skipped crossfade; Q7 opened | TalkBack session (owner) on the release build, then Milestone 3 |
 | 2026-10-07 | M4 done (TalkBack issue parked). Milestone 3: filters in repositories, tag merge/rename/delete, Library search and chips, word tags, Settings → Tags, seeded tags | Q2, then plan Milestone 5 |
 | 2026-10-07 | Owner test pass: action sheet animation, tab labels, Theme and Language settings, German and Arabic (RTL) | Q2, then plan Milestone 5 |
+| 2026-10-07 | Milestone 5: backup format, writer, streaming restore, snapshots (daily, list, restore), screens, reminder; phone round trip at 50,000 words | Owner trial (two weeks), then order Milestones 6-9 |
