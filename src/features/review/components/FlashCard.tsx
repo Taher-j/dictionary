@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, {
   interpolate,
+  ReduceMotion,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -34,8 +35,11 @@ export function FlashCard({ word, revealed, onReveal }: FlashCardProps) {
   const answerRef = useRef<View>(null);
 
   useEffect(() => {
-    // A new card starts face up without animation; a reveal animates.
-    progress.value = revealed ? withTiming(1, { duration: FLIP_MS }) : 0;
+    // A new card starts face up without animation; a reveal animates. The styles below pick a
+    // crossfade under reduced motion, so the timing always runs (Reanimated would skip it).
+    progress.value = revealed
+      ? withTiming(1, { duration: FLIP_MS, reduceMotion: ReduceMotion.Never })
+      : 0;
     if (revealed && answerRef.current) {
       AccessibilityInfo.sendAccessibilityEvent(answerRef.current, 'focus');
     }
