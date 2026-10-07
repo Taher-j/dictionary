@@ -62,8 +62,10 @@ with progress; snapshot restore about 4 s. Snapshots of this database are about 
 
 1. **Stop here** (07-milestones.md): the owner uses the app daily for at least two weeks and
    collects annoyances; that list orders Milestones 6-9.
-2. Before daily use: the phone holds the seeded "Seed (dev)" dictionary next to the owner's
-   words. Delete it (or wipe and start fresh), and install a release build.
+2. Done 2026-10-07: seed data removed with the new dev tool (the owner's 7 words, schedules and
+   tags verified unchanged), release build installed.
+   The three older snapshots on the phone still contain the seed data (about 236 MB); they rotate
+   out as new daily snapshots are taken (five kept).
 3. Not checked on the phone: "Back up now" through a real share target (the file was copied out
    with adb), restore on iOS.
 
