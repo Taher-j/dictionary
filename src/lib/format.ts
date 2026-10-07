@@ -16,3 +16,12 @@ export function formatPercent(share: number, locale: string): string {
     share,
   );
 }
+
+/** File size in megabytes, e.g. "12.4 MB". */
+export function formatMegabytes(bytes: number, locale: string): string {
+  return new Intl.NumberFormat(locale, {
+    style: 'unit',
+    unit: 'megabyte',
+    maximumFractionDigits: 1,
+  }).format(bytes / 1_000_000);
+}

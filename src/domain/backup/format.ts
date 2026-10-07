@@ -141,21 +141,12 @@ export type BackupError = 'notJson' | 'notBackup' | 'newerVersion' | 'invalidDat
 
 export type ParseResult = { ok: true; backup: Backup } | { ok: false; error: BackupError };
 
-/** What the restore preview shows. Deleted rows are in the file but not counted. */
-export interface BackupSummary {
-  dictionaries: number;
-  words: number;
-  reviews: number;
-  exportedAt: string;
-}
-
-export function summarize(backup: Backup): BackupSummary {
-  return {
-    dictionaries: backup.data.dictionaries.filter((d) => d.deletedAt === null).length,
-    words: backup.data.words.filter((w) => w.deletedAt === null).length,
-    reviews: backup.data.reviewLogs.length,
-    exportedAt: backup.exportedAt,
-  };
+/** Thrown by a restore when the file turns out not to be a usable backup. */
+export class BackupFormatError extends Error {
+  constructor(readonly code: BackupError) {
+    super(`Not a usable backup: ${code}`);
+    this.name = 'BackupFormatError';
+  }
 }
 
 /** `dictionary-backup-2026-10-07.json`, from the local date. */

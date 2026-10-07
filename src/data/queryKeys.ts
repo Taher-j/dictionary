@@ -57,3 +57,8 @@ export const reviewKeys = {
   today: () => [...reviewKeys.all, 'today'] as const,
   dueTomorrow: () => [...reviewKeys.all, 'dueTomorrow'] as const,
 };
+
+export const backupKeys = {
+  all: ['backup'] as const,
+  snapshots: () => [...backupKeys.all, 'snapshots'] as const,
+};

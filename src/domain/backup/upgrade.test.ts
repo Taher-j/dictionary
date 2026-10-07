@@ -1,26 +1,28 @@
-import { upgradeBackup, type UpgradeStep } from '@/domain/backup/upgrade';
+import { upgradeHeader, upgradePath, upgradeRow, type UpgradeStep } from '@/domain/backup/upgrade';
 
-describe('upgradeBackup', () => {
-  it('leaves a current file unchanged', () => {
-    const file = { formatVersion: 1, data: {} };
-    expect(upgradeBackup(file)).toBe(file);
+const steps: Record<number, UpgradeStep> = {
+  1: {
+    header: (h) => ({ ...h, renamedField: h.oldField }),
+    row: (table, row) => (table === 'old' ? { table: 'renamed', row } : { table, row }),
+  },
+  2: { row: (table, row) => (row.drop ? null : { table, row: { ...row, added: true } }) },
+};
+
+describe('backup upgrades', () => {
+  it('needs no steps for the current version, and no path from the future or a gap', () => {
+    expect(upgradePath(1)).toEqual([]);
+    expect(upgradePath(2)).toBeNull();
+    expect(upgradePath(0)).toBeNull();
   });
 
-  it('chains steps until the target version', () => {
-    const steps: Record<number, UpgradeStep> = {
-      1: (f) => ({ ...f, formatVersion: 2, renamed: f.old }),
-      2: (f) => ({ ...f, formatVersion: 3, added: true }),
-    };
-    expect(upgradeBackup({ formatVersion: 1, old: 'x' }, steps, 3)).toEqual({
-      formatVersion: 3,
-      old: 'x',
-      renamed: 'x',
-      added: true,
+  it('chains header and row steps', () => {
+    const path = upgradePath(1, steps, 3);
+    if (!path) throw new Error('expected a path');
+    expect(upgradeHeader(path, { oldField: 'x' })).toEqual({ oldField: 'x', renamedField: 'x' });
+    expect(upgradeRow(path, 'old', { id: 'a' })).toEqual({
+      table: 'renamed',
+      row: { id: 'a', added: true },
     });
-  });
-
-  it('returns null when a step is missing', () => {
-    expect(upgradeBackup({ formatVersion: 0 })).toBeNull();
-    expect(upgradeBackup({ formatVersion: 'one' })).toBeNull();
+    expect(upgradeRow(path, 'words', { id: 'b', drop: true })).toBeNull();
   });
 });

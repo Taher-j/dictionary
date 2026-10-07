@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
+import { BackupReminder } from '@/features/backup/components/BackupReminder';
 import { useDictionaries } from '@/features/dictionaries/hooks/useDictionaries';
 import { TodayReviewCard } from '@/features/review/components/TodayReviewCard';
 import { useIncompleteCount, useWordList } from '@/features/words/hooks/useWords';
@@ -13,7 +14,7 @@ import { spacing } from '@/ui/tokens';
 
 const RECENT_COUNT = 3;
 
-/** Today (docs/05-ux.md): the review card, the Inbox entry and recently added words. */
+/** Today (docs/05-ux.md): backup reminder, the review card, the Inbox entry, recently added words. */
 export function TodayScreen() {
   const { t } = useTranslation();
   const dictionaries = useDictionaries();
@@ -34,6 +35,7 @@ export function TodayScreen() {
   const count = incomplete.data ?? 0;
   return (
     <Screen title={t('tabs.today')} padded={false}>
+      <BackupReminder />
       <TodayReviewCard />
       {count > 0 ? (
         <ListRow

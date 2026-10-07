@@ -23,10 +23,11 @@ import {
   BACKUP_FORMAT,
   BACKUP_FORMAT_VERSION,
   BACKUP_TABLES,
-  type Backup,
+  BackupFormatError,
   type BackupHeader,
   type BackupTable,
 } from '@/domain/backup/format';
+import { scanBackup } from '@/domain/backup/parse';
 import type { Clock } from '@/lib/clock';
 
 /** The schema version this build writes and can restore snapshots of. */
@@ -84,10 +85,11 @@ export interface BackupService {
     onProgress?: (progress: BackupProgress) => void,
   ): Promise<number>;
   /**
-   * Replaces all data with the backup in one transaction, after a snapshot. Throws (and changes
-   * nothing) if the rows do not fit together, for example a card whose word is missing.
+   * Replaces all data with the backup, read piece by piece, in one transaction after a snapshot.
+   * Throws BackupFormatError (and changes nothing) for a file that is not a usable backup,
+   * including rows that do not fit together, such as a card whose word is missing.
    */
-  restore(backup: Backup, onProgress?: (progress: BackupProgress) => void): Promise<void>;
+  restore(pieces: AsyncIterable<string> | Iterable<string>): Promise<void>;
   /** Copies a snapshot's rows into the open database, after a snapshot of the current state. */
   restoreSnapshot(path: string): Promise<void>;
   /** The schema version of a snapshot file (migrations applied), or null if unreadable. */
@@ -211,41 +213,47 @@ export function createBackupService({ db, now, snapshots }: BackupDeps): BackupS
       return rowsWritten;
     },
 
-    async restore(backup, onProgress) {
+    async restore(pieces) {
       snapshot('pre-restore');
       await inTransaction(async () => {
+        // Checked at COMMIT, so the order of tables in the file does not matter.
+        db.run(sql`PRAGMA defer_foreign_keys = ON`);
         clearSearchIndex(db);
         for (const table of DELETE_ORDER) db.delete(table).run();
 
+        const buffers = new Map<BackupTable, Record<string, unknown>[]>();
         let statements = 0;
-        for (const table of BACKUP_TABLES) {
-          const rows = backup.data[table] as Record<string, unknown>[];
-          for (let i = 0; i < rows.length; i += INSERT_ROWS) {
-            const part = rows.slice(i, i + INSERT_ROWS);
-            db.insert(TABLES[table]).values(part).run();
-            if (table === 'words') {
-              insertIntoSearchIndex(
-                db,
-                part.map((w) => ({
-                  id: w.id as string,
-                  translation: w.translation as string | null,
-                  definition: w.definition as string | null,
-                })),
-              );
-            }
-            onProgress?.({
-              table,
-              done: Math.min(i + INSERT_ROWS, rows.length),
-              total: rows.length,
-            });
-            statements += 1;
-            if (statements % STATEMENTS_PER_YIELD === 0) await yieldToUi();
+        const flush = async (table: BackupTable) => {
+          const rows = buffers.get(table) ?? [];
+          if (rows.length === 0) return;
+          buffers.set(table, []);
+          db.insert(TABLES[table]).values(rows).run();
+          if (table === 'words') {
+            insertIntoSearchIndex(
+              db,
+              rows.map((w) => ({
+                id: w.id as string,
+                translation: w.translation as string | null,
+                definition: w.definition as string | null,
+              })),
+            );
           }
+          statements += 1;
+          if (statements % STATEMENTS_PER_YIELD === 0) await yieldToUi();
+        };
+
+        const result = await scanBackup(pieces, async (table, row) => {
+          const rows = buffers.get(table) ?? [];
+          rows.push(row);
+          buffers.set(table, rows);
+          if (rows.length >= INSERT_ROWS) await flush(table);
+        });
+        if (!result.ok) throw new BackupFormatError(result.error);
+        for (const table of BACKUP_TABLES) await flush(table);
+
+        if (db.all(sql`PRAGMA foreign_key_check`).length > 0) {
+          throw new BackupFormatError('invalidData');
         }
-        // Foreign keys are checked per statement, but say so explicitly before committing.
-        const violations = db.all(sql`PRAGMA foreign_key_check`);
-        if (violations.length > 0)
-          throw new Error('The backup refers to rows it does not contain.');
       });
     },
 

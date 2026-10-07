@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/ui/Button';
@@ -15,12 +15,21 @@ interface FormValues {
 export interface DictionaryFormProps {
   title: string;
   intro?: string;
+  /** Rendered under the intro, e.g. "Restore a backup" on first launch. */
+  extra?: ReactNode;
   initial: FormValues;
   busy: boolean;
   onSubmit: (values: FormValues) => Promise<void>;
 }
 
-export function DictionaryForm({ title, intro, initial, busy, onSubmit }: DictionaryFormProps) {
+export function DictionaryForm({
+  title,
+  intro,
+  extra,
+  initial,
+  busy,
+  onSubmit,
+}: DictionaryFormProps) {
   const { t } = useTranslation();
   const [values, setValues] = useState(initial);
   const canSave = values.name.trim() !== '' && !busy;
@@ -40,6 +49,7 @@ export function DictionaryForm({ title, intro, initial, busy, onSubmit }: Dictio
       }
     >
       {intro ? <Text tone="muted">{intro}</Text> : null}
+      {extra}
       <TextField
         label={t('dictionaryForm.name')}
         value={values.name}

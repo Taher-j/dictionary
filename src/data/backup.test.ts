@@ -5,7 +5,12 @@ import { createBackupService, SCHEMA_VERSION } from '@/data/backup';
 import type { SnapshotTarget } from '@/data/db/client';
 import * as schema from '@/data/db/schema';
 import { createTestContext, type TestContext } from '@/data/testing/testDatabase';
-import { BACKUP_COLUMNS, BACKUP_TABLES, type Backup } from '@/domain/backup/format';
+import {
+  BACKUP_COLUMNS,
+  BACKUP_TABLES,
+  BackupFormatError,
+  type Backup,
+} from '@/domain/backup/format';
 import { parseBackup } from '@/domain/backup/parse';
 import { CardState } from '@/domain/models';
 
@@ -137,10 +142,15 @@ async function writeToString(ctx: TestContext) {
   return { text: chunks.join(''), rows, chunks: chunks.length };
 }
 
-function parsed(text: string): Backup {
-  const result = parseBackup(text);
+async function parsed(text: string): Promise<Backup> {
+  const result = await parseBackup(text);
   if (!result.ok) throw new Error(`backup did not parse: ${result.error}`);
   return result.backup;
+}
+
+/** The text in pieces, as a file is read on the device. */
+function* pieces(text: string, size = 4096) {
+  for (let i = 0; i < text.length; i += size) yield text.slice(i, i + size);
 }
 
 describe('backup columns', () => {
@@ -173,7 +183,7 @@ describe('backup round trip', () => {
     await fill(source);
     const { text, rows } = await writeToString(source);
 
-    const backup = parsed(text);
+    const backup = await parsed(text);
     expect(backup).toMatchObject({ formatVersion: 1, schemaVersion: SCHEMA_VERSION });
     expect(rows).toBe(BACKUP_TABLES.reduce((n, t) => n + backup.data[t].length, 0));
     // Tombstones are included.
@@ -182,7 +192,7 @@ describe('backup round trip', () => {
     expect(backup.data.tags.some((t) => t.deletedAt !== null)).toBe(true);
 
     const target = createTestContext();
-    await backupService(target).service.restore(backup);
+    await backupService(target).service.restore(pieces(text));
     expect(dump(target)).toEqual(dump(source));
 
     // Repositories and the search index work on the restored data.
@@ -204,7 +214,7 @@ describe('backup round trip', () => {
   it('replaces existing data and takes a snapshot first', async () => {
     const source = createTestContext();
     await fill(source);
-    const backup = parsed((await writeToString(source)).text);
+    const { text } = await writeToString(source);
 
     const target = createTestContext();
     const other = await target.repos.dictionaries.create({ name: 'Mine' });
@@ -214,7 +224,7 @@ describe('backup round trip', () => {
       translation: 'x',
     });
     const { service, snapshots } = backupService(target);
-    await service.restore(backup);
+    await service.restore(pieces(text, 1000));
 
     expect(dump(target)).toEqual(dump(source));
     expect(await target.repos.words.search('only here')).toEqual([]);
@@ -225,14 +235,16 @@ describe('backup round trip', () => {
   it('changes nothing when the rows do not fit together', async () => {
     const source = createTestContext();
     await fill(source);
-    const backup = parsed((await writeToString(source)).text);
+    const backup = await parsed((await writeToString(source)).text);
     backup.data.dictionaries = []; // words now point at a missing dictionary
 
     const target = createTestContext();
     const mine = await target.repos.dictionaries.create({ name: 'Mine' });
     await target.repos.words.create({ dictionaryId: mine.id, term: 'kept', translation: 'x' });
     const before = dump(target);
-    await expect(backupService(target).service.restore(backup)).rejects.toThrow();
+    await expect(backupService(target).service.restore([JSON.stringify(backup)])).rejects.toThrow(
+      BackupFormatError,
+    );
     expect(dump(target)).toEqual(before);
     expect((await target.repos.words.search('kept')).map((w) => w.term)).toEqual(['kept']);
   });
@@ -295,5 +307,26 @@ describe('daily snapshot', () => {
     expect(service.snapshotIfNoneSince(dayStart + 86_400_000)).toBe(true);
     expect(snapshots.paths).toHaveLength(2);
     expect(service.listSnapshots().every((s) => s.restorable)).toBe(true);
+  });
+});
+
+describe('restoring a file that is not a usable backup', () => {
+  it.each([
+    ['another JSON file', '{"name":"package","version":"1.0.0"}', 'notBackup'],
+    ['a damaged row', '', 'invalidData'],
+  ])('rejects %s and changes nothing', async (_, given, code) => {
+    const source = createTestContext();
+    await fill(source);
+    const { text } = await writeToString(source);
+    const input = given || text.replace('"term":"Haus"', '"term":42');
+
+    const target = createTestContext();
+    const mine = await target.repos.dictionaries.create({ name: 'Mine' });
+    await target.repos.words.create({ dictionaryId: mine.id, term: 'kept', translation: 'x' });
+    const before = dump(target);
+    await expect(backupService(target).service.restore(pieces(input, 777))).rejects.toMatchObject({
+      code,
+    });
+    expect(dump(target)).toEqual(before);
   });
 });

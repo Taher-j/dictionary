@@ -9,6 +9,7 @@ import {
 } from '@/features/dictionaries/hooks/useDictionaries';
 import { useSetSetting } from '@/features/settings/hooks/useSettings';
 import { DictionaryForm } from '@/features/dictionaries/components/DictionaryForm';
+import { TextButton } from '@/ui/TextButton';
 
 interface DictionaryFormScreenProps {
   /** Edit this dictionary; without it a new one is created. */
@@ -31,6 +32,14 @@ export function DictionaryFormScreen({ dictionaryId, firstLaunch }: DictionaryFo
       key={existing.data?.id ?? 'new'}
       title={dictionaryId ? t('dictionaryForm.editTitle') : t('dictionaryForm.newTitle')}
       intro={firstLaunch ? t('dictionaryForm.firstLaunchIntro') : undefined}
+      extra={
+        firstLaunch ? (
+          <TextButton
+            label={t('backup.firstLaunchRestore')}
+            onPress={() => router.replace('/backup')}
+          />
+        ) : undefined
+      }
       initial={{
         name: existing.data?.name ?? '',
         termLang: existing.data?.termLang ?? '',
