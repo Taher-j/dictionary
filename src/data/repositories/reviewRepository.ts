@@ -31,6 +31,9 @@ import {
   type SessionId,
   type WordId,
 } from '@/domain/models';
+import type { PracticeMode } from '@/domain/practice/mode';
+import type { PracticeSource } from '@/domain/practice/practice';
+import { WEAK_AGAINS, WEAK_LAPSES, WEAK_WINDOW_DAYS } from '@/domain/practice/weakWords';
 import { dueCutoffs, remainingNewToday, type QueueCard } from '@/domain/queue';
 import { nextStudyDayStart, studyDayStart } from '@/domain/studyDay';
 
@@ -56,11 +59,15 @@ export interface AnswerInput {
   sessionId: SessionId;
   rating: Rating;
   durationMs: number | null;
+  /** How the card was shown: flashcard, typing or choice. */
+  mode?: PracticeMode;
 }
 
 export interface AnswerResult {
   logId: ReviewLogId;
   card: Card;
+  /** Lapses before this answer: the leech prompt fires when the count reaches 8. */
+  previousLapses: number;
 }
 
 export interface ReviewRepository {
@@ -70,7 +77,14 @@ export interface ReviewRepository {
   introducedToday(): Promise<number>;
   /** Cards due during the next study day (for the session summary). */
   dueTomorrowCount(): Promise<number>;
-  startSession(): Promise<SessionId>;
+  /** `filter` is the practice setup as JSON (null for reviews). */
+  startSession(kind?: 'review' | 'practice', filter?: string | null): Promise<SessionId>;
+  /** A random sample of cards for free practice; any dictionary, suspended cards left out. */
+  practiceCandidates(source: PracticeSource, count: number): Promise<QueueCard[]>;
+  /** Free practice: logs the answer with `scheduled = 0`; the card is not touched. */
+  logPractice(input: AnswerInput): Promise<ReviewLogId>;
+  /** Undo of a practice answer: deletes its log (the card never changed). */
+  undoPractice(logId: ReviewLogId): Promise<void>;
   endSession(id: SessionId): Promise<void>;
   /**
    * One transaction: reads the card, applies `schedule`, writes the log row (with the previous
@@ -267,17 +281,75 @@ export function createReviewRepository({ db, now, newId }: RepositoryDeps): Revi
       );
     },
 
-    async startSession() {
+    async startSession(kind = 'review', filter = null) {
       const id = newId() as SessionId;
-      db.insert(sessions).values({ id, kind: 'review', startedAt: now() }).run();
+      db.insert(sessions).values({ id, kind, filter, startedAt: now() }).run();
       return id;
+    },
+
+    async practiceCandidates(source, count) {
+      const conditions = [
+        eq(cards.suspended, false),
+        or(eq(cards.direction, 'recognition'), eq(dictionaries.bothDirections, true)),
+        isNull(words.deletedAt),
+        or(isNotNull(words.translation), isNotNull(words.definition)),
+        isNull(dictionaries.deletedAt),
+      ];
+      if (source.kind === 'dictionary')
+        conditions.push(eq(words.dictionaryId, source.dictionaryId));
+      if (source.kind === 'tag') {
+        conditions.push(
+          sql`${words.id} IN (SELECT word_id FROM word_tags WHERE tag_id = ${source.tagId})`,
+        );
+      }
+      if (source.kind === 'weak') {
+        const since = now() - WEAK_WINDOW_DAYS * 86_400_000;
+        conditions.push(
+          or(
+            gte(cards.lapses, WEAK_LAPSES),
+            sql`(SELECT count(*) FROM review_logs AS l
+                 WHERE l.card_id = ${cards.id} AND l.rating = 1 AND l.scheduled = 1
+                   AND l.reviewed_at >= ${since}) >= ${WEAK_AGAINS}`,
+          ),
+        );
+      }
+      return selectQueueRows()
+        .where(and(...conditions))
+        .orderBy(sql`random()`)
+        .limit(count)
+        .all()
+        .map(toQueueCard);
+    },
+
+    async logPractice({ cardId, sessionId, rating, durationMs, mode = 'flashcard' }) {
+      const logId = newId() as ReviewLogId;
+      db.insert(reviewLogs)
+        .values({
+          id: logId,
+          cardId,
+          sessionId,
+          reviewedAt: now(),
+          rating,
+          mode,
+          scheduled: false,
+          durationMs,
+          prevCard: null,
+        })
+        .run();
+      return logId;
+    },
+
+    async undoPractice(logId) {
+      db.delete(reviewLogs)
+        .where(and(eq(reviewLogs.id, logId), eq(reviewLogs.scheduled, false)))
+        .run();
     },
 
     async endSession(id) {
       db.update(sessions).set({ endedAt: now() }).where(eq(sessions.id, id)).run();
     },
 
-    async answer({ cardId, sessionId, rating, durationMs }, schedule) {
+    async answer({ cardId, sessionId, rating, durationMs, mode = 'flashcard' }, schedule) {
       const at = now();
       return db.transaction((tx) => {
         const row = tx.select().from(cards).where(eq(cards.id, cardId)).get();
@@ -292,7 +364,7 @@ export function createReviewRepository({ db, now, newId }: RepositoryDeps): Revi
             sessionId,
             reviewedAt: at,
             rating,
-            mode: 'flashcard',
+            mode,
             scheduled: true,
             durationMs,
             prevCard: JSON.stringify(prev),
@@ -305,7 +377,7 @@ export function createReviewRepository({ db, now, newId }: RepositoryDeps): Revi
           .returning()
           .get();
         if (!updated) throw new Error(`Card not found: ${cardId}`);
-        return { logId, card: toCard(updated) };
+        return { logId, card: toCard(updated), previousLapses: prev.lapses };
       });
     },
 
