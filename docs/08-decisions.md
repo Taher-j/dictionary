@@ -85,3 +85,7 @@ name can still change freely afterwards.
 | 2026-10-06 | Suspend lives in the session header menu ("I know this") and word detail's menu (Suspend / Unsuspend) | Owner |
 | 2026-10-07 | Library: with filters set and no search text, the matching words replace the dictionary list, grouped by dictionary (keyset on `dictionary_id, term_fold, id`, served by `words_dict_fold`) | Owner (Milestone 3 plan): otherwise the chips do nothing until the user types |
 | 2026-10-07 | Renaming a tag to a name another tag already has (case and spacing ignored) offers "Merge into …" instead of failing | Owner (Milestone 3 plan) |
+| 2026-10-07 | Settings → Appearance: Theme (System / Light / Dark) and Language (System / English / Deutsch), stored in `settings`, applied at startup before the splash hides | Owner, between Milestones 3 and 5 |
+| 2026-10-07 | UI languages: English, German, Arabic. Arabic is not offered in Settings; it is used when the device (or Android/iOS per-app) language is Arabic and Language is System | Owner |
+| 2026-10-07 | Layout direction follows the resolved UI language and is forced (`I18nManager.forceRTL`); a change asks the user to restart (no `expo-updates`). Expo Router gets it through `LocaleProvider` | React Native on Android reads RTL from the system language list, so an Arabic per-app language gave a left-to-right layout |
+| 2026-10-07 | German and Arabic strings were written by Claude; Arabic needs a native speaker's review before release | Owner to arrange (Milestone 11) |

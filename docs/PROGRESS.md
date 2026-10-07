@@ -56,6 +56,19 @@ chip, "Show words with this tag" opens Library filtered, Settings → Tags list 
 Not tried on the phone: merge and delete (one tag only; covered by tests), rename conflict.
 Broadest status filter (mature, grouped) takes 81 ms; see `03-data-model.md`.
 
+### Between milestones (owner request, 2026-10-07)
+
+- [x] Action sheets: backdrop fades, sheet slides (the dim layer slid up with the sheet)
+- [x] Tab buttons: icon glyph no longer read by TalkBack before the tab name
+- [x] Settings → Appearance: Theme (System / Light / Dark), Language (System / English / Deutsch)
+- [x] German and Arabic translations (Arabic only via the system language); RTL layout for Arabic,
+      headers included; restart prompt when the direction changes
+- Checked on the phone: theme switch and persistence, German live switch (tabs, headers, numbers),
+  Arabic via Android per-app language (layout, headers, lists, word detail), back to English.
+  Not observed: the restart prompt at startup (Android ran the app when the per-app language
+  changed, so the direction was already right). Arabic and German texts need a native check.
+- New dev build installed (native change: supported locales).
+
 ### Next steps
 
 1. **Q2 must be answered before Milestone 5**: final Android package / iOS bundle id and URL
@@ -101,3 +114,4 @@ Broadest status filter (mature, grouped) takes 81 ms; see `03-data-model.md`.
 | 2026-10-06 | M2 wrap-up (keyboard, sheet fix), release build; M4 domain, data and UI, most phone checks | M4 next steps above, then Milestone 3 |
 | 2026-10-07 | M4 phone checks: "I know this", reduced-motion crossfade; fixed seeder memory states and skipped crossfade; Q7 opened | TalkBack session (owner) on the release build, then Milestone 3 |
 | 2026-10-07 | M4 done (TalkBack issue parked). Milestone 3: filters in repositories, tag merge/rename/delete, Library search and chips, word tags, Settings → Tags, seeded tags | Q2, then plan Milestone 5 |
+| 2026-10-07 | Owner test pass: action sheet animation, tab labels, Theme and Language settings, German and Arabic (RTL) | Q2, then plan Milestone 5 |
