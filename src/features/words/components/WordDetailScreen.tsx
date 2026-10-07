@@ -6,6 +6,7 @@ import { StyleSheet, View } from 'react-native';
 import type { WordDetails, WordId } from '@/domain/models';
 import { useDictionaries } from '@/features/dictionaries/hooks/useDictionaries';
 import { useSetWordSuspended } from '@/features/review/hooks/useReview';
+import { WordTags } from '@/features/tags/components/WordTags';
 import { EditableField } from '@/features/words/components/EditableField';
 import {
   useDeleteWords,
@@ -128,6 +129,8 @@ export function WordDetailScreen({ id }: { id: WordId }) {
       {!showEmpty && emptyFields.length > 0 ? (
         <TextButton label={t('word.addDetails')} onPress={() => setShowEmpty(true)} />
       ) : null}
+
+      <WordTags wordId={id} />
 
       <View style={[styles.meta, { borderTopColor: colors.border }]}>
         <StatusBadge status={data.status} />
