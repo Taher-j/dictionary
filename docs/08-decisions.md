@@ -92,3 +92,5 @@ name can still change freely afterwards.
 | 2026-10-07 | Q2 deferred to release: the placeholder package stays through Milestone 5 | Owner. Consequence: data entered under the placeholder moves to the final identifier by backup and restore (built in Milestone 5) |
 | 2026-10-07 | Backups are read in pieces and split into rows, not read whole | On the S24 Ultra an 80 MB backup (50,000 words, 200,000 reviews) read as one string failed with OutOfMemoryError. The plan had allowed this switch |
 | 2026-10-07 | Snapshot restore copies rows from the attached snapshot into the open database; same schema version only | Owner (Milestone 5 plan): no app restart needed |
+| 2026-10-07 | Milestone 7 (practice modes) is built during the owner's trial period instead of after it | Owner |
+| 2026-10-07 | M7 plan: turning "both directions" off hides recall cards from queues but keeps their schedule; the leech prompt fires when an answer takes `lapses` from 7 to 8 (no stored flag); lookup URL templates use `{term}` | Owner (Milestone 7 plan) |

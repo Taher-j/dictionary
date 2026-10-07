@@ -14,7 +14,7 @@ and add one line to the session log.
 | 3 — Search, tags and filters | Done (iOS unverified) |
 | 5 — Backup and restore (MVP gate) | Done (iOS unverified) |
 | 6 — Import, export and bulk edits | Not started |
-| 7 — Practice modes | Not started |
+| 7 — Practice modes | In progress |
 | 8 — Statistics and motivation | Not started |
 | 9 — Capture from anywhere | Not started |
 | 10 — Polish, accessibility, performance | Not started |
@@ -22,52 +22,32 @@ and add one line to the session log.
 
 (Rows are in build order: 4 comes before 3.)
 
-## Current milestone: 5 — Backup and restore (done; owner trial period)
+## Current milestone: 7 — Practice modes (in progress, during the owner's trial)
 
-Milestone 3's checklist and the between-milestones work are in git history (`docs/PROGRESS.md`
-before Milestone 5). Plan approved on 2026-10-07 with: snapshot restore copies rows into the open
-database (same schema version only); restore reads the whole backup file, measured on the phone.
-Q2 deferred to release.
+Milestone 5's checklist is in git history (`docs/PROGRESS.md` before Milestone 7). Plan approved on
+2026-10-07: part A (directions and modes), phone check, then part B (free practice and extras).
 
-### Tasks
+### Tasks — part A
 
-- [x] `expo-sharing`, `expo-document-picker`; new dev build
-- [x] `src/domain/backup/`: format, validation, upgrade chain (header and rows), row checks,
-      splitter for reading in pieces
-- [x] Backup writer: table by table, paged by rowid, tombstones included
-- [x] Replace restore: snapshot, one transaction, search index rebuilt, preferences applied
-- [x] `src/services/files.ts`: cache file, share sheet, pick, read in 512 KB pieces
-- [x] Snapshots: daily on first launch of the study day; list and restore in Settings
-- [x] Screens: Backup and restore, first-launch "Restore a backup", Today reminder banner
-- [x] Tests: round trip, malformed/foreign/cut-off files, splitter (any piece size, UTF-8),
-      upgrade chain, reminder rule, migration fixture (`schema-3.db`)
-- [x] Phone: back up, wipe, restore at 50,000 words / 200,000 reviews
+- [ ] `expo-speech`; dev build; prototype: TTS voices for en/de/ar, typing (umlauts, Arabic)
+- [ ] Both directions per dictionary: recall cards, toggle in the dictionary menu, queue filter
+- [ ] Sibling rule in the queue
+- [ ] Modes: `grade()` for typing and multiple choice, distractor picker, mode choice per card,
+      "Flashcards only" setting
+- [ ] Review screen renders all three modes; one rating per card per session
+- [ ] Tests: grading, distractors, mode choice, sibling rule
+
+### Tasks — part B
+
+- [ ] Free practice (dictionary, tag, weak words), logged with `scheduled = 0`
+- [ ] Weak-words query; leech prompt
+- [ ] Speak button (`src/services/speech.ts`, voice check); lookup links
 
 ### Done-when checks
 
-- [x] Back up, wipe the app, restore: every row count and every card's due date matches. Phone,
-      2026-10-07: counts of all tables and fingerprints of all card schedules, words and review
-      logs identical before and after
-- [x] A Jest round-trip test (serialize -> parse -> restore into an empty database) passes
-- [x] A malformed or foreign JSON file produces a message, not a crash (tests; on the phone: a
-      foreign JSON file, a cut-off backup)
-
-### Measured on the phone (50,000 words, 200,000 reviews, 80.5 MB file)
-
-Back up about 23 s; preview (read and check every row) under 10 s; replace restore about 65 s
-with progress; snapshot restore about 4 s. Snapshots of this database are about 106 MB each
-(five kept). Real data is far smaller.
-
-### Next steps
-
-1. **Stop here** (07-milestones.md): the owner uses the app daily for at least two weeks and
-   collects annoyances; that list orders Milestones 6-9.
-2. Done 2026-10-07: seed data removed with the new dev tool (the owner's 7 words, schedules and
-   tags verified unchanged), release build installed.
-   The three older snapshots on the phone still contain the seed data (about 236 MB); they rotate
-   out as new daily snapshots are taken (five kept).
-3. Not checked on the phone: "Back up now" through a real share target (the file was copied out
-   with adb), restore on iOS.
+- [ ] Each mode's `grade()` has unit tests, including alternatives and one-edit tolerance
+- [ ] A 20-card session mixes all three modes
+- [ ] A test asserts that free practice leaves every card's state and due date unchanged
 
 ### Known issues
 
