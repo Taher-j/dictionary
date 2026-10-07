@@ -9,6 +9,7 @@ Append new decisions at the bottom of the log with a date. Do not rewrite histor
 | Q1 | Final app name. Placeholder in use (see below). The display name can change at any time. | Milestone 11 at the latest |
 | Q2 | Final Android package / iOS bundle identifier and URL scheme. Placeholders in use (see below). | Before release (Milestone 11); deferred by the owner on 2026-10-07 |
 | Q7 | A card whose memory state ts-fsrs rejects (for example from a bad import) currently crashes the review screen. Skip it and report it, or repair it (reset to New)? Only seeded data has hit this so far (fixed 2026-10-07). | Milestone 6 (import) |
+| Q8 | More practice games (owner, 2026-10-07): which ones (matching, fill in the blank, listen and type, letter tiles, ...), whether they are practice-only, and saved practice setups. Not timed (speed round is on the Avoid list) | Before V2 planning |
 
 ## Placeholders in use
 
@@ -94,3 +95,4 @@ name can still change freely afterwards.
 | 2026-10-07 | Snapshot restore copies rows from the attached snapshot into the open database; same schema version only | Owner (Milestone 5 plan): no app restart needed |
 | 2026-10-07 | Milestone 7 (practice modes) is built during the owner's trial period instead of after it | Owner |
 | 2026-10-07 | M7 plan: turning "both directions" off hides recall cards from queues but keeps their schedule; the leech prompt fires when an answer takes `lapses` from 7 to 8 (no stored flag); lookup URL templates use `{term}` | Owner (Milestone 7 plan) |
+| 2026-10-07 | Practice setup (part B) lets the owner choose source (dictionary, tag, weak words), the modes to use (flashcard, typing, multiple choice) and the card count; the last setup is remembered | Owner asked to configure practice sessions; more games deferred (Q8) |
