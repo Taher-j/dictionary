@@ -64,13 +64,14 @@ crossfade under reduced motion.
 ### Next steps
 
 1. Owner: one full session with TalkBack.
-2. The phone runs the **dev build** with fresh seeded data (50,000 words, 2026-10-07). Delete it
-   (Settings → Developer tools → Delete all data), then build and install the release:
-   `cd android && ./gradlew assembleRelease`, `adb install -r app/build/outputs/apk/release/app-release.apk`.
+2. Done 2026-10-07: data deleted, release build installed (not debuggable, opens on the
+   first-launch sheet with an empty database). Do the TalkBack session on it.
 3. Tick the last done-when check, set Milestone 4 to Done, plan Milestone 3.
 
 ### Known issues
 
+- Developer tools: "Delete all data" runs without a confirmation (dev builds only). A stray tap
+  wiped the seeded data on 2026-10-07.
 - In quick add with the keyboard closed, a toast (for example "moved to the trash" after deleting
   from a word opened via the duplicate link) covers the Save button until it times out.
 - Restoring a word gives no duplicate warning when a word with the same `term_norm` was added while
@@ -99,4 +100,4 @@ crossfade under reduced motion.
 | 2026-10-05 | Milestone 1: schema + 3 migrations, repositories, startup with snapshot, dev tools; Q6 decided (FTS5); fixed WAL growth | Milestone 2 — Dictionaries and words (plan first) |
 | 2026-10-05/06 | Milestone 2: Library, dictionary list, quick add, word detail, Inbox, Trash; keyboard-controller | Milestone 4 — Review core (plan first) |
 | 2026-10-06 | M2 wrap-up (keyboard, sheet fix), release build; M4 domain, data and UI, most phone checks | M4 next steps above, then Milestone 3 |
-| 2026-10-07 | M4 phone checks: "I know this", reduced-motion crossfade; fixed seeder memory states and skipped crossfade; Q7 opened | TalkBack session (owner), release build, then Milestone 3 |
+| 2026-10-07 | M4 phone checks: "I know this", reduced-motion crossfade; fixed seeder memory states and skipped crossfade; Q7 opened | TalkBack session (owner) on the release build, then Milestone 3 |
