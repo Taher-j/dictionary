@@ -1,5 +1,6 @@
 import {
   CardState,
+  type CardDirection,
   type CardId,
   type CardStateValue,
   type EpochMs,
@@ -11,6 +12,7 @@ import { nextStudyDayStart } from '@/domain/studyDay';
 export interface QueueCard {
   cardId: CardId;
   wordId: WordId;
+  direction: CardDirection;
   state: CardStateValue;
   due: EpochMs;
   wordCreatedAt: EpochMs;
@@ -57,28 +59,41 @@ export interface BuildQueueInput {
   newCards: readonly QueueCard[];
   remainingNew: number;
   sessionSize: number;
+  /** Words with a card already reviewed this study day (sibling rule). */
+  reviewedToday?: ReadonlySet<WordId>;
 }
 
 const isLearning = (card: QueueCard) =>
   card.state === CardState.Learning || card.state === CardState.Relearning;
 
 /**
- * Session algorithm steps 1-3 (docs/04-learning-system.md): learning and relearning cards first,
- * then review cards by due date; new cards newest first, one after every four reviews; capped at
- * the session size.
+ * Session algorithm steps 1-4 (docs/04-learning-system.md): learning and relearning cards first,
+ * then review cards by due date; new cards newest first, one after every four reviews; one card
+ * per word (sibling rule: the other direction waits for the next study day); capped at the
+ * session size.
  */
 export function buildQueue({
   due,
   newCards,
   remainingNew,
   sessionSize,
+  reviewedToday = new Set(),
 }: BuildQueueInput): QueueCard[] {
-  const reviews = [...due].sort((a, b) => {
-    const learningFirst = Number(isLearning(b)) - Number(isLearning(a));
-    return learningFirst !== 0 ? learningFirst : a.due - b.due;
-  });
+  const taken = new Set<WordId>(reviewedToday);
+  const firstPerWord = (card: QueueCard) => {
+    if (taken.has(card.wordId)) return false;
+    taken.add(card.wordId);
+    return true;
+  };
+  const reviews = [...due]
+    .sort((a, b) => {
+      const learningFirst = Number(isLearning(b)) - Number(isLearning(a));
+      return learningFirst !== 0 ? learningFirst : a.due - b.due;
+    })
+    .filter(firstPerWord);
   const fresh = [...newCards]
     .sort((a, b) => b.wordCreatedAt - a.wordCreatedAt)
+    .filter(firstPerWord)
     .slice(0, Math.max(0, remainingNew));
 
   const queue: QueueCard[] = [];

@@ -21,6 +21,7 @@ import type { RepositoryDeps } from '@/data/repositories/deps';
 import {
   CardState,
   type Card,
+  type CardDirection,
   type CardId,
   type CardSchedule,
   type CardStateValue,
@@ -37,6 +38,8 @@ export interface QueueCandidates {
   due: QueueCard[];
   newCards: QueueCard[];
   remainingNew: number;
+  /** Words with a card reviewed this study day (sibling rule). */
+  reviewedToday: Set<WordId>;
 }
 
 export interface TodaySummary {
@@ -81,6 +84,7 @@ export interface ReviewRepository {
 const queueColumns = {
   cardId: cards.id,
   wordId: cards.wordId,
+  direction: cards.direction,
   state: cards.state,
   due: cards.due,
   wordCreatedAt: words.createdAt,
@@ -89,6 +93,7 @@ const queueColumns = {
 type QueueRow = {
   cardId: string;
   wordId: string;
+  direction: CardDirection;
   state: number;
   due: number;
   wordCreatedAt: number;
@@ -97,14 +102,20 @@ type QueueRow = {
 const toQueueCard = (row: QueueRow): QueueCard => ({
   cardId: row.cardId as CardId,
   wordId: row.wordId as WordId,
+  direction: row.direction,
   state: row.state as CardStateValue,
   due: row.due,
   wordCreatedAt: row.wordCreatedAt,
 });
 
-/** Cards that may enter a queue: not suspended, word complete and not deleted, dictionary active. */
+/**
+ * Cards that may enter a queue: not suspended, word complete and not deleted, dictionary active,
+ * and recall cards only while the dictionary practises both directions (turning it off keeps
+ * their schedule).
+ */
 const eligible = and(
   eq(cards.suspended, false),
+  or(eq(cards.direction, 'recognition'), eq(dictionaries.bothDirections, true)),
   isNull(words.deletedAt),
   or(isNotNull(words.translation), isNotNull(words.definition)),
   isNull(dictionaries.deletedAt),
@@ -197,7 +208,8 @@ export function createReviewRepository({ db, now, newId }: RepositoryDeps): Revi
           sql`CASE WHEN ${cards.state} = ${CardState.Review} THEN 1 ELSE 0 END`,
           asc(cards.due),
         )
-        .limit(sessionSize)
+        // Twice the session: the sibling rule may drop one card per word.
+        .limit(sessionSize * 2)
         .all()
         .map(toQueueCard);
       const newCards =
@@ -206,10 +218,19 @@ export function createReviewRepository({ db, now, newId }: RepositoryDeps): Revi
           : selectQueueRows()
               .where(and(eligible, eq(cards.state, CardState.New)))
               .orderBy(desc(words.createdAt), desc(cards.id))
-              .limit(Math.min(remainingNew, sessionSize))
+              .limit(Math.min(remainingNew, sessionSize) * 2)
               .all()
               .map(toQueueCard);
-      return { due, newCards, remainingNew };
+      const reviewedToday = new Set(
+        db
+          .selectDistinct({ wordId: cards.wordId })
+          .from(reviewLogs)
+          .innerJoin(cards, eq(cards.id, reviewLogs.cardId))
+          .where(and(gte(reviewLogs.reviewedAt, studyDayStart(at)), eq(reviewLogs.scheduled, true)))
+          .all()
+          .map((r) => r.wordId as WordId),
+      );
+      return { due, newCards, remainingNew, reviewedToday };
     },
 
     async todaySummary(dailyNewLimit) {

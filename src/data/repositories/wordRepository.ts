@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, inArray, isNotNull, isNull, or, sql, type SQL } from 'drizzle-orm';
 
-import { cards, words } from '@/data/db/schema';
+import { cards, dictionaries, words } from '@/data/db/schema';
 import { chunk, type RepositoryDeps } from '@/data/repositories/deps';
 import {
   insertIntoSearchIndex,
@@ -11,6 +11,7 @@ import {
 import { duplicateTier } from '@/domain/duplicates';
 import {
   CardState,
+  type CardDirection,
   type CardStateValue,
   type DictionaryId,
   type DuplicateMatch,
@@ -191,30 +192,44 @@ export function createWordRepository({ db, now, newId }: RepositoryDeps): WordRe
 
   /**
    * Card lifecycle (docs/03-data-model.md): create the recognition card when the word first gets a
-   * meaning. Removing the meaning leaves the card alone; the queue skips words without one.
+   * meaning, and the recall card too when its dictionary practises both directions. Removing the
+   * meaning leaves cards alone; the queue skips words without one.
    */
-  const ensureRecognitionCard = (
+  const ensureCards = (
     tx: Pick<RepositoryDeps['db'], 'select' | 'insert'>,
     word: WordRow,
     at: number,
   ) => {
     if (!hasMeaning(word)) return;
-    const card = tx
-      .select({ id: cards.id })
-      .from(cards)
-      .where(and(eq(cards.wordId, word.id), eq(cards.direction, 'recognition')))
+    const dictionary = tx
+      .select({ bothDirections: dictionaries.bothDirections })
+      .from(dictionaries)
+      .where(eq(dictionaries.id, word.dictionaryId))
       .get();
-    if (card) return;
-    tx.insert(cards)
-      .values({
-        id: newId(),
-        wordId: word.id,
-        direction: 'recognition',
-        state: CardState.New,
-        due: at,
-        updatedAt: at,
-      })
-      .run();
+    const wanted: CardDirection[] = dictionary?.bothDirections
+      ? ['recognition', 'recall']
+      : ['recognition'];
+    const existing = new Set(
+      tx
+        .select({ direction: cards.direction })
+        .from(cards)
+        .where(eq(cards.wordId, word.id))
+        .all()
+        .map((c) => c.direction),
+    );
+    for (const direction of wanted) {
+      if (existing.has(direction)) continue;
+      tx.insert(cards)
+        .values({
+          id: newId(),
+          wordId: word.id,
+          direction,
+          state: CardState.New,
+          due: at,
+          updatedAt: at,
+        })
+        .run();
+    }
   };
 
   const listSelect = () => db.select(listColumns).from(words).leftJoin(cards, recognitionCardJoin);
@@ -399,7 +414,7 @@ export function createWordRepository({ db, now, newId }: RepositoryDeps): WordRe
           })
           .returning()
           .get();
-        ensureRecognitionCard(tx, inserted, at);
+        ensureCards(tx, inserted, at);
         insertIntoSearchIndex(tx, [inserted]);
         return inserted;
       });
@@ -424,7 +439,7 @@ export function createWordRepository({ db, now, newId }: RepositoryDeps): WordRe
           .returning()
           .get();
         if (!updated) throw new Error(`Word not found: ${id}`);
-        ensureRecognitionCard(tx, updated, at);
+        ensureCards(tx, updated, at);
         if ('translation' in patch || 'definition' in patch) updateSearchIndex(tx, updated);
         return updated;
       });

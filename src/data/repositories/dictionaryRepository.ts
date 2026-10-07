@@ -1,13 +1,14 @@
-import { and, asc, desc, eq, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, isNotNull, isNull, or, sql } from 'drizzle-orm';
 
-import { dictionaries, words } from '@/data/db/schema';
-import type { RepositoryDeps } from '@/data/repositories/deps';
-import type {
-  Dictionary,
-  DictionaryId,
-  DictionaryPatch,
-  DictionaryWithCounts,
-  NewDictionary,
+import { cards, dictionaries, words } from '@/data/db/schema';
+import { chunk, type RepositoryDeps } from '@/data/repositories/deps';
+import {
+  CardState,
+  type Dictionary,
+  type DictionaryId,
+  type DictionaryPatch,
+  type DictionaryWithCounts,
+  type NewDictionary,
 } from '@/domain/models';
 
 export interface DictionaryRepository {
@@ -118,17 +119,50 @@ export function createDictionaryRepository({
     },
 
     async update(id, patch) {
-      const row = db
-        .update(dictionaries)
-        .set({
-          ...patch,
-          ...(patch.name !== undefined ? { name: patch.name.trim() } : {}),
-          updatedAt: now(),
-        })
-        .where(and(eq(dictionaries.id, id), isNull(dictionaries.deletedAt)))
-        .returning()
-        .get();
-      if (!row) throw new Error(`Dictionary not found: ${id}`);
+      const at = now();
+      const row = db.transaction((tx) => {
+        const updated = tx
+          .update(dictionaries)
+          .set({
+            ...patch,
+            ...(patch.name !== undefined ? { name: patch.name.trim() } : {}),
+            updatedAt: at,
+          })
+          .where(and(eq(dictionaries.id, id), isNull(dictionaries.deletedAt)))
+          .returning()
+          .get();
+        if (!updated) throw new Error(`Dictionary not found: ${id}`);
+        // Both directions: every word with a meaning gets its recall card (new, due now).
+        // Turning it off keeps those cards; the queue leaves them out.
+        if (patch.bothDirections) {
+          const missing = tx
+            .select({ id: words.id })
+            .from(words)
+            .where(
+              and(
+                eq(words.dictionaryId, id),
+                or(isNotNull(words.translation), isNotNull(words.definition)),
+                sql`NOT EXISTS (SELECT 1 FROM cards WHERE cards.word_id = ${words.id} AND cards.direction = 'recall')`,
+              ),
+            )
+            .all();
+          for (const part of chunk(missing, 100)) {
+            tx.insert(cards)
+              .values(
+                part.map((w) => ({
+                  id: newId(),
+                  wordId: w.id,
+                  direction: 'recall' as const,
+                  state: CardState.New,
+                  due: at,
+                  updatedAt: at,
+                })),
+              )
+              .run();
+          }
+        }
+        return updated;
+      });
       return toDictionary(row);
     },
 

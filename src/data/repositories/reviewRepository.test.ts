@@ -92,9 +92,11 @@ describe('ReviewRepository.queueCandidates', () => {
     for (const term of ['a', 'b', 'c', 'd', 'e']) await addWord(ctx, de, term);
     const dailyNewLimit = 3;
 
+    // Candidates may run past the limit (the sibling rule can drop some); the queue cuts them.
     const first = await repos.reviews.queueCandidates({ dailyNewLimit, sessionSize: 20 });
-    expect(first.newCards).toHaveLength(3);
-    for (const candidate of first.newCards) {
+    const firstQueue = buildQueue({ ...first, sessionSize: 20 });
+    expect(firstQueue).toHaveLength(3);
+    for (const candidate of firstQueue) {
       const card = await repos.cards.getById(candidate.cardId);
       if (card) await rate(ctx, card, 4);
     }
@@ -112,7 +114,9 @@ describe('ReviewRepository.queueCandidates', () => {
     ).toBe(0);
     tick(2 * HOUR);
     const nextDay = await repos.reviews.queueCandidates({ dailyNewLimit, sessionSize: 20 });
-    expect(nextDay.newCards).toHaveLength(2);
+    expect(buildQueue({ ...nextDay, sessionSize: 20 }).filter((c) => c.state === 0)).toHaveLength(
+      2,
+    );
   });
 
   it('caps the queue at the session size', async () => {
@@ -206,5 +210,58 @@ describe('ReviewRepository.todaySummary', () => {
       newCount: 0,
       nextDueAt: card.due,
     });
+  });
+});
+
+describe('both directions', () => {
+  it('turning it on adds a recall card to every word with a meaning; new words get both', async () => {
+    const ctx = await setup();
+    const { repos, de } = ctx;
+    const haus = await addWord(ctx, de, 'Haus');
+    await repos.words.create({ dictionaryId: de.id, term: 'leer' }); // no meaning, no cards
+    await repos.dictionaries.update(de.id, { bothDirections: true });
+    expect((await repos.cards.listForWord(haus.word.id)).map((c) => c.direction).sort()).toEqual([
+      'recall',
+      'recognition',
+    ]);
+    const baum = await addWord(ctx, de, 'Baum');
+    expect(await repos.cards.listForWord(baum.word.id)).toHaveLength(2);
+    // Turning it on again adds nothing.
+    await repos.dictionaries.update(de.id, { bothDirections: true });
+    expect(await repos.cards.listForWord(haus.word.id)).toHaveLength(2);
+  });
+
+  it('turning it off hides recall cards from queues and keeps them', async () => {
+    const ctx = await setup();
+    const { repos, de } = ctx;
+    await repos.dictionaries.update(de.id, { bothDirections: true });
+    const haus = await addWord(ctx, de, 'Haus');
+    const limits = { dailyNewLimit: 10, sessionSize: 20 };
+    expect(
+      (await repos.reviews.queueCandidates(limits)).newCards.map((c) => c.direction).sort(),
+    ).toEqual(['recall', 'recognition']);
+
+    await repos.dictionaries.update(de.id, { bothDirections: false });
+    const off = await repos.reviews.queueCandidates(limits);
+    expect(off.newCards.map((c) => c.direction)).toEqual(['recognition']);
+    expect(await repos.cards.listForWord(haus.word.id)).toHaveLength(2);
+    expect((await repos.reviews.todaySummary(10)).newCount).toBe(1);
+  });
+
+  it('reports words reviewed this study day for the sibling rule', async () => {
+    const ctx = await setup();
+    const { repos, de } = ctx;
+    await repos.dictionaries.update(de.id, { bothDirections: true });
+    const haus = await addWord(ctx, de, 'Haus');
+    const recognition = (await repos.cards.listForWord(haus.word.id)).find(
+      (c) => c.direction === 'recognition',
+    );
+    if (!recognition) throw new Error('expected a card');
+    await rate(ctx, recognition, 1);
+    const candidates = await repos.reviews.queueCandidates({ dailyNewLimit: 10, sessionSize: 20 });
+    expect([...candidates.reviewedToday]).toEqual([haus.word.id]);
+    // The recall card waits: one card per word per study day.
+    const queue = buildQueue({ ...candidates, sessionSize: 20 });
+    expect(queue.map((c) => c.direction)).toEqual([]);
   });
 });

@@ -16,6 +16,7 @@ function card(state: CardStateValue, due: number, wordCreatedAt = 0): QueueCard 
   return {
     cardId: `c${seq}` as CardId,
     wordId: `w${seq}` as WordId,
+    direction: 'recognition',
     state,
     due,
     wordCreatedAt,
@@ -95,5 +96,41 @@ describe('estimateMinutes', () => {
     expect(estimateMinutes(1)).toBe(1);
     expect(estimateMinutes(12)).toBe(2);
     expect(estimateMinutes(20)).toBe(4);
+  });
+});
+
+describe('sibling rule', () => {
+  const sibling = (of: QueueCard, state: CardStateValue, due: number): QueueCard => ({
+    ...card(state, due),
+    wordId: of.wordId,
+    direction: 'recall',
+  });
+
+  it('keeps one card per word: the earlier one in queue order', () => {
+    const a = card(CardState.Review, now - 2 * MIN);
+    const aRecall = sibling(a, CardState.Review, now - MIN);
+    const b = card(CardState.Review, now - 3 * MIN);
+    const queue = buildQueue({
+      due: [aRecall, a, b],
+      newCards: [],
+      remainingNew: 0,
+      sessionSize: 20,
+    });
+    expect(ids(queue)).toEqual([b.cardId, a.cardId]);
+  });
+
+  it('applies across due and new cards, and to words reviewed earlier today', () => {
+    const a = card(CardState.Learning, now - MIN);
+    const aNew = sibling(a, CardState.New, 0);
+    const b = card(CardState.Review, now - MIN);
+    const c = card(CardState.New, 0, 5);
+    const queue = buildQueue({
+      due: [a, b],
+      newCards: [aNew, c],
+      remainingNew: 5,
+      sessionSize: 20,
+      reviewedToday: new Set([b.wordId]),
+    });
+    expect(ids(queue)).toEqual([a.cardId, c.cardId]);
   });
 });
