@@ -139,6 +139,10 @@ export interface Tag {
   deletedAt: EpochMs | null;
 }
 
+export interface TagWithCount extends Tag {
+  wordCount: number;
+}
+
 export type WordStatus = 'incomplete' | 'new' | 'learning' | 'young' | 'mature' | 'suspended';
 
 export interface WordListItem {
@@ -152,20 +156,32 @@ export interface WordListItem {
   createdAt: EpochMs;
 }
 
-export type WordSort = 'alpha' | 'recent';
+/** `grouped`: by dictionary, then A-Z (filtered lists across dictionaries). */
+export type WordSort = 'alpha' | 'recent' | 'grouped';
 
-/** One filter object shared by lists and search. Tags, status and starred arrive in Milestone 3. */
-export interface WordQuery {
+/** Statuses a word with a meaning can have (the status filter). */
+export type ReviewStatus = Exclude<WordStatus, 'incomplete'>;
+
+/** Filters shared by lists and search. All set filters must match. */
+export interface WordFilter {
   dictionaryId?: DictionaryId;
+  tagId?: TagId;
+  status?: ReviewStatus;
+  starred?: boolean;
   /** Only words without a translation and definition (the Inbox). */
   incomplete?: boolean;
+}
+
+/** One query object shared by lists and search. */
+export interface WordQuery extends WordFilter {
   sort: WordSort;
   limit?: number;
 }
 
 export type WordCursor =
   | { sort: 'alpha'; termFold: string; id: WordId }
-  | { sort: 'recent'; createdAt: EpochMs; id: WordId };
+  | { sort: 'recent'; createdAt: EpochMs; id: WordId }
+  | { sort: 'grouped'; dictionaryId: DictionaryId; termFold: string; id: WordId };
 
 export interface Page<TItem, TCursor> {
   items: TItem[];

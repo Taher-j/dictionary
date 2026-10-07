@@ -1,4 +1,4 @@
-import type { CardId, DictionaryId, WordId, WordQuery } from '@/domain/models';
+import type { CardId, DictionaryId, WordFilter, WordId, WordQuery } from '@/domain/models';
 import type { SettingKey } from '@/domain/settings';
 
 // TanStack Query key factories. Invalidate the broadest key that covers a change.
@@ -14,7 +14,7 @@ export const wordKeys = {
   lists: () => [...wordKeys.all, 'list'] as const,
   list: (query: WordQuery) => [...wordKeys.lists(), query] as const,
   searches: () => [...wordKeys.all, 'search'] as const,
-  search: (text: string, query?: Omit<WordQuery, 'sort'>) =>
+  search: (text: string, query?: WordFilter & { limit?: number }) =>
     [...wordKeys.searches(), text, query ?? {}] as const,
   detail: (id: WordId) => [...wordKeys.all, 'detail', id] as const,
   incompleteCount: () => [...wordKeys.all, 'incompleteCount'] as const,

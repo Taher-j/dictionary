@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNotNull, isNull, or, sql, type SQL } from 'drizzle-orm';
 
 import { cards, words } from '@/data/db/schema';
 import { chunk, type RepositoryDeps } from '@/data/repositories/deps';
@@ -17,20 +17,22 @@ import {
   type ImportBatchId,
   type NewWord,
   type Page,
+  type ReviewStatus,
   type Word,
   type WordCursor,
+  type WordFilter,
   type WordId,
   type WordListItem,
   type WordPatch,
   type WordQuery,
 } from '@/domain/models';
 import { termKeys, type TermKeys } from '@/domain/termKeys';
-import { hasMeaning, wordStatus } from '@/domain/wordStatus';
+import { hasMeaning, MATURE_INTERVAL_DAYS, wordStatus } from '@/domain/wordStatus';
 
 export interface WordRepository {
   getById(id: WordId): Promise<Word | null>;
   list(query: WordQuery, cursor?: WordCursor | null): Promise<Page<WordListItem, WordCursor>>;
-  search(text: string, query?: Omit<WordQuery, 'sort'>): Promise<WordListItem[]>;
+  search(text: string, query?: WordFilter & { limit?: number }): Promise<WordListItem[]>;
   /** Words without a translation and definition (the Inbox badge). */
   countIncomplete(): Promise<number>;
   findDuplicates(dictionaryId: DictionaryId, keys: TermKeys): Promise<DuplicateMatch[]>;
@@ -72,6 +74,49 @@ const listColumns = {
 const incomplete = and(isNull(words.translation), isNull(words.definition));
 
 const recognitionCardJoin = and(eq(cards.wordId, words.id), eq(cards.direction, 'recognition'));
+
+const meaningful = or(isNotNull(words.translation), isNotNull(words.definition));
+
+/** Mirrors `wordStatus` (docs/03-data-model.md, "Derived status") on the joined recognition card. */
+function statusCondition(status: ReviewStatus): SQL | undefined {
+  if (status === 'suspended') return and(meaningful, eq(cards.suspended, true));
+  const active = and(meaningful, eq(cards.suspended, false));
+  switch (status) {
+    case 'new':
+      return and(active, eq(cards.state, CardState.New));
+    case 'learning':
+      return and(active, inArray(cards.state, [CardState.Learning, CardState.Relearning]));
+    case 'young':
+      return and(
+        active,
+        eq(cards.state, CardState.Review),
+        sql`${cards.scheduledDays} < ${MATURE_INTERVAL_DAYS}`,
+      );
+    case 'mature':
+      return and(
+        active,
+        eq(cards.state, CardState.Review),
+        sql`${cards.scheduledDays} >= ${MATURE_INTERVAL_DAYS}`,
+      );
+  }
+}
+
+/**
+ * Conditions for every filter except the dictionary (callers choose how to match it, see
+ * `search`). Deleted words are always excluded.
+ */
+function filterConditions(filter: WordFilter): (SQL | undefined)[] {
+  const conditions: (SQL | undefined)[] = [isNull(words.deletedAt)];
+  if (filter.incomplete) conditions.push(incomplete);
+  if (filter.starred) conditions.push(eq(words.starred, true));
+  if (filter.status) conditions.push(statusCondition(filter.status));
+  if (filter.tagId) {
+    conditions.push(
+      sql`${words.id} IN (SELECT word_id FROM word_tags WHERE tag_id = ${filter.tagId})`,
+    );
+  }
+  return conditions;
+}
 
 interface ListRow {
   id: string;
@@ -180,9 +225,8 @@ export function createWordRepository({ db, now, newId }: RepositoryDeps): WordRe
 
     async list(query, cursor) {
       const limit = query.limit ?? DEFAULT_PAGE_SIZE;
-      const conditions: (SQL | undefined)[] = [isNull(words.deletedAt)];
+      const conditions = filterConditions(query);
       if (query.dictionaryId) conditions.push(eq(words.dictionaryId, query.dictionaryId));
-      if (query.incomplete) conditions.push(incomplete);
 
       let rows: (ListRow & { termFold: string })[];
       if (query.sort === 'alpha') {
@@ -194,6 +238,17 @@ export function createWordRepository({ db, now, newId }: RepositoryDeps): WordRe
         rows = listSelect()
           .where(and(...conditions))
           .orderBy(asc(words.termFold), asc(words.id))
+          .limit(limit + 1)
+          .all();
+      } else if (query.sort === 'grouped') {
+        if (cursor?.sort === 'grouped') {
+          conditions.push(
+            sql`(${words.dictionaryId}, ${words.termFold}, ${words.id}) > (${cursor.dictionaryId}, ${cursor.termFold}, ${cursor.id})`,
+          );
+        }
+        rows = listSelect()
+          .where(and(...conditions))
+          .orderBy(asc(words.dictionaryId), asc(words.termFold), asc(words.id))
           .limit(limit + 1)
           .all();
       } else {
@@ -213,10 +268,18 @@ export function createWordRepository({ db, now, newId }: RepositoryDeps): WordRe
       const last = pageRows[pageRows.length - 1];
       let nextCursor: WordCursor | null = null;
       if (rows.length > limit && last) {
+        const id = last.id as WordId;
         nextCursor =
           query.sort === 'alpha'
-            ? { sort: 'alpha', termFold: last.termFold, id: last.id as WordId }
-            : { sort: 'recent', createdAt: last.createdAt, id: last.id as WordId };
+            ? { sort: 'alpha', termFold: last.termFold, id }
+            : query.sort === 'grouped'
+              ? {
+                  sort: 'grouped',
+                  dictionaryId: last.dictionaryId as DictionaryId,
+                  termFold: last.termFold,
+                  id,
+                }
+              : { sort: 'recent', createdAt: last.createdAt, id };
       }
       return { items: pageRows.map(toListItem), nextCursor };
     },
@@ -234,7 +297,7 @@ export function createWordRepository({ db, now, newId }: RepositoryDeps): WordRe
       // candidate ids drive the query; the unary + keeps SQLite from scanning a whole dictionary
       // through its index and testing every row (measured on a phone, Q6).
       const useFts = [...trimmed].length >= MIN_FTS_QUERY_LENGTH;
-      const conditions: (SQL | undefined)[] = [isNull(words.deletedAt)];
+      const conditions = filterConditions(query ?? {});
       if (useFts) {
         conditions.push(sql`${words.id} IN (
           SELECT id FROM words WHERE term_fold >= ${fold} AND term_fold < ${fold + PREFIX_END}

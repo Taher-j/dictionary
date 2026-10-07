@@ -334,3 +334,154 @@ describe('Inbox (incomplete words)', () => {
     expect(await repos.words.countIncomplete()).toBe(1);
   });
 });
+
+describe('filters', () => {
+  /**
+   * Words in two dictionaries covering every status, starred or not, with zero to two tags. One
+   * word lost its meaning after it got a card: it counts as incomplete, not new.
+   */
+  async function fixture() {
+    const ctx = await setup();
+    const { repos, de, en } = ctx;
+    const verbs = await repos.tags.getOrCreate('verbs');
+    const travel = await repos.tags.getOrCreate('travel');
+
+    const states = [
+      { state: CardState.New, scheduledDays: 0 },
+      { state: CardState.Learning, scheduledDays: 0 },
+      { state: CardState.Relearning, scheduledDays: 0 },
+      { state: CardState.Review, scheduledDays: 3 },
+      { state: CardState.Review, scheduledDays: 21 },
+    ];
+    const expected: {
+      id: string;
+      dictionaryId: string;
+      starred: boolean;
+      tagIds: string[];
+    }[] = [];
+
+    for (let i = 0; i < 24; i += 1) {
+      const dictionary = i % 2 === 0 ? de : en;
+      const meaningful = i % 6 !== 5;
+      const word = await repos.words.create({
+        dictionaryId: dictionary.id,
+        term: `word ${String(i).padStart(2, '0')}`,
+        translation: meaningful ? `meaning ${i}` : null,
+        starred: i % 3 === 0,
+      });
+      const [card] = await repos.cards.listForWord(word.id);
+      const schedule = states[i % states.length];
+      if (card && schedule) {
+        await repos.cards.updateSchedule(card.id, { ...card, ...schedule });
+        if (i % 7 === 0) await repos.cards.setSuspendedForWord(word.id, true);
+      }
+      const tagIds = [i % 2 === 1 ? verbs.id : null, i % 4 < 2 ? travel.id : null].filter(
+        (id) => id !== null,
+      );
+      await repos.tags.setWordTags(word.id, tagIds);
+      expected.push({ id: word.id, dictionaryId: dictionary.id, starred: i % 3 === 0, tagIds });
+    }
+
+    // Had a card, then lost its meaning.
+    const emptied = await repos.words.create({
+      dictionaryId: de.id,
+      term: 'emptied',
+      translation: 'gone soon',
+    });
+    await repos.words.update(emptied.id, { translation: null });
+    expected.push({ id: emptied.id, dictionaryId: de.id, starred: false, tagIds: [verbs.id] });
+    await repos.tags.setWordTags(emptied.id, [verbs.id]);
+
+    // Deleted words never match.
+    const deleted = await repos.words.create({ dictionaryId: de.id, term: 'deleted' });
+    await repos.tags.setWordTags(deleted.id, [verbs.id]);
+    await repos.words.softDelete([deleted.id]);
+
+    // The derived status of every word, from the unfiltered list.
+    const all = await allPages(ctx, { sort: 'alpha', limit: 100 });
+    const page = await repos.words.list({ sort: 'alpha', limit: 100 });
+    const statusById = new Map<string, string>(page.items.map((w) => [w.id, w.status]));
+    expect(all.ids).toHaveLength(expected.length);
+
+    return { ...ctx, verbs, travel, expected, statusById };
+  }
+
+  it('match the derived status and tags for every filter combination', async () => {
+    const ctx = await fixture();
+    const { de, verbs, travel, expected, statusById } = ctx;
+    const statuses = [undefined, 'new', 'learning', 'young', 'mature', 'suspended'] as const;
+    // Every status occurs, so no combination passes by matching nothing.
+    expect(new Set(statusById.values())).toEqual(
+      new Set(['incomplete', 'new', 'learning', 'young', 'mature', 'suspended']),
+    );
+
+    let combinations = 0;
+    for (const dictionaryId of [undefined, de.id]) {
+      for (const tagId of [undefined, verbs.id, travel.id]) {
+        for (const status of statuses) {
+          for (const starred of [undefined, true]) {
+            for (const incomplete of [undefined, true]) {
+              const filter = { dictionaryId, tagId, status, starred, incomplete };
+              const want = expected
+                .filter(
+                  (w) =>
+                    (!dictionaryId || w.dictionaryId === dictionaryId) &&
+                    (!tagId || w.tagIds.includes(tagId)) &&
+                    (!status || statusById.get(w.id) === status) &&
+                    (!starred || w.starred) &&
+                    (!incomplete || statusById.get(w.id) === 'incomplete'),
+                )
+                .map((w) => w.id)
+                .sort();
+              const got = (await allPages(ctx, { ...filter, sort: 'alpha', limit: 7 })).ids;
+              expect({ filter, ids: [...got].sort() }).toEqual({ filter, ids: want });
+              combinations += 1;
+            }
+          }
+        }
+      }
+    }
+    expect(combinations).toBe(144);
+  });
+
+  it('apply to search, on both the prefix and the meaning path', async () => {
+    const { repos, verbs, expected, statusById } = await fixture();
+    const verbIds = expected.filter((w) => w.tagIds.includes(verbs.id)).map((w) => w.id);
+
+    // "wo": term prefix only (shorter than the trigram index needs).
+    const short = await repos.words.search('wo', { tagId: verbs.id, status: 'new' });
+    expect(short.map((w) => w.id).sort()).toEqual(
+      verbIds.filter((id) => statusById.get(id) === 'new').sort(),
+    );
+    expect(short.length).toBeGreaterThan(0);
+
+    // "meaning": FTS on translations.
+    const long = await repos.words.search('meaning', { tagId: verbs.id, starred: true });
+    const want = expected
+      .filter(
+        (w) => w.tagIds.includes(verbs.id) && w.starred && statusById.get(w.id) !== 'incomplete',
+      )
+      .map((w) => w.id)
+      .sort();
+    expect(long.map((w) => w.id).sort()).toEqual(want);
+    expect(long.length).toBeGreaterThan(0);
+  });
+
+  it('pages grouped by dictionary, then A-Z, without gaps or duplicates', async () => {
+    const ctx = await fixture();
+    const { repos, verbs } = ctx;
+    const { ids, pages } = await allPages(ctx, { sort: 'grouped', tagId: verbs.id, limit: 3 });
+    expect(pages).toBeGreaterThan(2);
+    expect(new Set(ids).size).toBe(ids.length);
+
+    const page = await repos.words.list({ sort: 'grouped', tagId: verbs.id, limit: 100 });
+    expect(page.items.map((w) => w.id)).toEqual(ids);
+    const keys = page.items.map((w) => `${w.dictionaryId} ${w.term}`);
+    expect(keys).toEqual([...keys].sort());
+    // Each dictionary forms one block.
+    const blocks = page.items
+      .map((w) => w.dictionaryId)
+      .filter((id, i, arr) => i === 0 || arr[i - 1] !== id);
+    expect(blocks).toHaveLength(2);
+  });
+});
