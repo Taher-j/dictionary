@@ -63,6 +63,8 @@ Samsung keyboard (adb cannot type them).
 ### Next steps
 
 1. Owner trial continues; collect annoyances. Q8 (more practice games) is open.
+   The phone runs the release build with the owner's "English Arabic" (7 words) and the
+   "German – English" test dictionary (150 words, both directions; created with the new dev tool).
 2. Remaining V1 milestones: 6 (import/export, bulk edits), 8 (statistics), 9 (capture), then 10
    and 11.
 
