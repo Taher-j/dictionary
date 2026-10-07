@@ -153,7 +153,9 @@
     "name": "الاسم",
     "termLang": "لغة المصطلحات",
     "meaningLang": "لغة المعاني",
-    "langPlaceholder": "رمز اللغة، مثل de أو en أو ja"
+    "langPlaceholder": "رمز اللغة، مثل de أو en أو ja",
+    "lookupUrl": "رابط البحث (اختياري)",
+    "lookupUrlHint": "عنوان https فيه {{placeholder}} مكان الكلمة."
   },
   "dictionary": {
     "addWord": "إضافة كلمة",
@@ -205,7 +207,10 @@
     "tapToAdd": "إضافة {{field}}",
     "nextReview": "المراجعة التالية: {{date}}",
     "suspend": "إيقاف (أعرفها)",
-    "unsuspend": "استئناف"
+    "unsuspend": "استئناف",
+    "speak": "انطق {{term}}",
+    "lookUp": "ابحث عنها",
+    "lookUpHint": "يفتح رابط البحث الخاص بالقاموس في المتصفح"
   },
   "inbox": {
     "title": "تحتاج إلى معنى",
@@ -363,7 +368,9 @@
       "dueTomorrow_many": "{{count, number}} بطاقة مستحقة غدًا",
       "dueTomorrow_other": "{{count, number}} بطاقة مستحقة غدًا",
       "missed": "كلمات لم تعرفها",
-      "editHint": "يفتح الكلمة لتعديلها"
+      "editHint": "يفتح الكلمة لتعديلها",
+      "practiceMore": "تدرّب أكثر",
+      "practiceNote": "التدرّب لا يغيّر مواعيد استحقاق الكلمات."
     },
     "recallPrompt": "ما الكلمة؟",
     "typeLabel": "إجابتك",
@@ -378,7 +385,12 @@
     "chooseWord": "اختر الكلمة",
     "optionCorrect": "{{option}}، الإجابة الصحيحة",
     "optionWrong": "{{option}}، إجابتك، خاطئة",
-    "notQuite": "ليس تمامًا"
+    "notQuite": "ليس تمامًا",
+    "leechTitle": "هذه الكلمة تفلت منك",
+    "leechBody": "نسيتها 8 مرات. يساعد غالبًا مثال أو وسيلة تذكّر، أو أوقفها الآن.",
+    "leechEdit": "تعديل الكلمة",
+    "leechSuspend": "إيقاف",
+    "leechLater": "ليس الآن"
   },
   "settings": {
     "dailyNewLimit": "كلمات جديدة يوميًا",
@@ -467,5 +479,26 @@
     "reminderLast": "كانت آخر نسخة احتياطية في {{date}}.",
     "reminderAction": "انسخ احتياطيًا",
     "firstLaunchRestore": "استعادة نسخة احتياطية"
+  },
+  "practice": {
+    "title": "تدرّب",
+    "intro": "تدرّب على أي كلمات كلما شئت. التدرّب لا يغيّر أبدًا مواعيد استحقاق الكلمات.",
+    "source": "على ماذا تتدرّب",
+    "sourceDictionary": "قاموس",
+    "sourceTag": "وسم",
+    "sourceWeak": "الكلمات الضعيفة",
+    "weakHint": "كلمات نسيتها 3 مرات أو أكثر، أو مرتين في آخر 30 يومًا.",
+    "chooseDictionary": "اختر قاموسًا",
+    "chooseTag": "اختر وسمًا",
+    "modes": "الأنماط",
+    "modeFlashcard": "البطاقات",
+    "modeTyping": "الكتابة",
+    "modeChoice": "الاختيار من متعدد",
+    "modesHint": "الكتابة لبطاقات المعنى ← الكلمة؛ البطاقات الأخرى تستخدم أنماطك الأخرى أو البطاقات.",
+    "count": "البطاقات",
+    "start": "ابدأ التدرّب",
+    "nothing": "لا يوجد ما يُتدرّب عليه هنا بعد.",
+    "todayEntry": "تدرّب",
+    "todayEntryHint": "تدرّب على قاموس أو وسم أو كلماتك الضعيفة"
   }
 }

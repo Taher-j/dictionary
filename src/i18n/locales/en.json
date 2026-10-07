@@ -121,7 +121,9 @@
     "name": "Name",
     "termLang": "Language of the terms",
     "meaningLang": "Language of the meanings",
-    "langPlaceholder": "Language code, e.g. de, en, ja"
+    "langPlaceholder": "Language code, e.g. de, en, ja",
+    "lookupUrl": "Lookup link (optional)",
+    "lookupUrlHint": "An https address with {{placeholder}} where the word goes."
   },
   "dictionary": {
     "addWord": "Add a word",
@@ -173,7 +175,10 @@
     "tapToAdd": "Add {{field}}",
     "nextReview": "Next review: {{date}}",
     "suspend": "Suspend (I know this)",
-    "unsuspend": "Unsuspend"
+    "unsuspend": "Unsuspend",
+    "speak": "Say {{term}}",
+    "lookUp": "Look it up",
+    "lookUpHint": "Opens the dictionary's lookup link in your browser"
   },
   "inbox": {
     "title": "Needs a meaning",
@@ -271,7 +276,9 @@
       "dueTomorrow_one": "{{count, number}} card due tomorrow",
       "dueTomorrow_other": "{{count, number}} cards due tomorrow",
       "missed": "Missed words",
-      "editHint": "Opens the word to edit it"
+      "editHint": "Opens the word to edit it",
+      "practiceMore": "Practise more",
+      "practiceNote": "Practice does not change when words are due."
     },
     "recallPrompt": "What is the word?",
     "typeLabel": "Your answer",
@@ -286,7 +293,33 @@
     "chooseWord": "Choose the word",
     "optionCorrect": "{{option}}, correct answer",
     "optionWrong": "{{option}}, your answer, wrong",
-    "notQuite": "Not quite"
+    "notQuite": "Not quite",
+    "leechTitle": "This word keeps slipping",
+    "leechBody": "You have forgotten it 8 times. An example or a memory aid often helps, or suspend it for now.",
+    "leechEdit": "Edit word",
+    "leechSuspend": "Suspend",
+    "leechLater": "Not now"
+  },
+  "practice": {
+    "title": "Practice",
+    "intro": "Practise any words, as often as you like. Practice never changes when words are due.",
+    "source": "What to practise",
+    "sourceDictionary": "A dictionary",
+    "sourceTag": "A tag",
+    "sourceWeak": "Weak words",
+    "weakHint": "Words you forgot 3 or more times, or twice in the last 30 days.",
+    "chooseDictionary": "Choose a dictionary",
+    "chooseTag": "Choose a tag",
+    "modes": "Modes",
+    "modeFlashcard": "Flashcards",
+    "modeTyping": "Typing",
+    "modeChoice": "Multiple choice",
+    "modesHint": "Typing is used for meaning → word cards; other cards use your other modes or flashcards.",
+    "count": "Cards",
+    "start": "Start practice",
+    "nothing": "There is nothing to practise here yet.",
+    "todayEntry": "Practice",
+    "todayEntryHint": "Practise a dictionary, a tag or your weak words"
   },
   "settings": {
     "dailyNewLimit": "New words per day",

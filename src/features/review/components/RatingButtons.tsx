@@ -15,7 +15,8 @@ const RATING_KEYS = { 1: 'again', 2: 'hard', 3: 'good', 4: 'easy' } as const sat
 >;
 
 export interface RatingButtonsProps {
-  preview: Record<Rating, RatingPreview>;
+  /** Intervals per rating; left out in free practice, which schedules nothing. */
+  preview?: Record<Rating, RatingPreview>;
   disabled: boolean;
   onRate: (rating: Rating) => void;
 }
@@ -30,12 +31,14 @@ export function RatingButtons({ preview, disabled, onRate }: RatingButtonsProps)
     <View style={styles.row}>
       {RATINGS.map((rating) => {
         const name = t(`review.rating.${RATING_KEYS[rating]}`);
-        const interval = intervalLabel(preview[rating].intervalMs);
+        const interval = preview ? intervalLabel(preview[rating].intervalMs) : null;
         return (
           <Pressable
             key={rating}
             accessibilityRole="button"
-            accessibilityLabel={t('review.ratingLabel', { rating: name, interval: interval.long })}
+            accessibilityLabel={
+              interval ? t('review.ratingLabel', { rating: name, interval: interval.long }) : name
+            }
             accessibilityState={{ disabled }}
             disabled={disabled}
             onPress={() => onRate(rating)}
@@ -48,9 +51,11 @@ export function RatingButtons({ preview, disabled, onRate }: RatingButtonsProps)
             <Text variant="label" style={styles.center} tone={rating === 1 ? 'danger' : 'default'}>
               {name}
             </Text>
-            <Text variant="caption" tone="muted" style={styles.center}>
-              {interval.short}
-            </Text>
+            {interval ? (
+              <Text variant="caption" tone="muted" style={styles.center}>
+                {interval.short}
+              </Text>
+            ) : null}
           </Pressable>
         );
       })}

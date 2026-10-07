@@ -5,11 +5,13 @@ import { Button } from '@/ui/Button';
 import { Screen } from '@/ui/Screen';
 import { Text } from '@/ui/Text';
 import { TextField } from '@/ui/TextField';
+import { isValidLookupTemplate } from '@/domain/lookup';
 
 interface FormValues {
   name: string;
   termLang: string;
   meaningLang: string;
+  lookupUrl: string;
 }
 
 export interface DictionaryFormProps {
@@ -32,7 +34,8 @@ export function DictionaryForm({
 }: DictionaryFormProps) {
   const { t } = useTranslation();
   const [values, setValues] = useState(initial);
-  const canSave = values.name.trim() !== '' && !busy;
+  const lookupValid = values.lookupUrl.trim() === '' || isValidLookupTemplate(values.lookupUrl);
+  const canSave = values.name.trim() !== '' && lookupValid && !busy;
   const set = (key: keyof FormValues) => (text: string) =>
     setValues((v) => ({ ...v, [key]: text }));
 
@@ -72,6 +75,20 @@ export function DictionaryForm({
         autoCapitalize="none"
         autoCorrect={false}
         placeholder={t('dictionaryForm.langPlaceholder')}
+      />
+      <TextField
+        label={t('dictionaryForm.lookupUrl')}
+        value={values.lookupUrl}
+        onChangeText={set('lookupUrl')}
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="url"
+        placeholder="https://en.wiktionary.org/wiki/{term}"
+        hint={
+          <Text variant="caption" tone={lookupValid ? 'muted' : 'danger'}>
+            {t('dictionaryForm.lookupUrlHint', { placeholder: '{term}' })}
+          </Text>
+        }
       />
     </Screen>
   );

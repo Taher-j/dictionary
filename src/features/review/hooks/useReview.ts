@@ -1,15 +1,22 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { router } from 'expo-router';
+import { Alert } from 'react-native';
 
 import { cardKeys, reviewKeys, wordKeys } from '@/data/queryKeys';
 import { useRepositories } from '@/data/RepositoriesProvider';
 import type { Card, CardId, EpochMs, Rating, ReviewLogId, Word, WordId } from '@/domain/models';
 import { buildChoice, seededRandom, type Choice } from '@/domain/practice/choice';
+import type { PracticeMode } from '@/domain/practice/mode';
+import type { PracticeSetup } from '@/domain/practice/practice';
+import { becameLeech } from '@/domain/practice/weakWords';
 import { buildQueue } from '@/domain/queue';
 import { createScheduler } from '@/domain/scheduler';
 import { useReviewSessionStore } from '@/features/review/sessionStore';
-import { useSettings } from '@/features/settings/hooks/useSettings';
+import { useSetSetting, useSettings } from '@/features/settings/hooks/useSettings';
+import { i18n } from '@/i18n';
 import { systemClock } from '@/lib/clock';
+
+const DAY_MS = 86_400_000;
 
 /** One scheduler for the app; its defaults come from docs/04-learning-system.md. */
 export const scheduler = createScheduler();
@@ -71,6 +78,34 @@ export function useStartReview() {
   });
 }
 
+/**
+ * Free practice (docs/04-learning-system.md): a random sample from the setup's source, in the
+ * setup's modes. Remembers the setup for next time. False when no card matches.
+ */
+export function useStartPractice() {
+  const { reviews } = useRepositories();
+  const setSetting = useSetSetting();
+  const start = useReviewSessionStore((s) => s.start);
+  return useMutation({
+    mutationFn: async ({ setup }: { setup: PracticeSetup; inPlace?: boolean }) => {
+      await setSetting.mutateAsync({ key: 'lastPracticeSetup', value: setup });
+      const queue = await reviews.practiceCandidates(setup.source, setup.count);
+      if (queue.length === 0) return false;
+      const sessionId = await reviews.startSession('practice', JSON.stringify(setup));
+      start(
+        sessionId,
+        queue.map(({ cardId, wordId }) => ({ cardId, wordId })),
+        reviewClock(),
+        { kind: 'practice', setup },
+      );
+      return true;
+    },
+    onSuccess: (started, { inPlace }) => {
+      if (started && !inPlace) router.push('/review');
+    },
+  });
+}
+
 /** The card on screen with its word. Word edits invalidate cardKeys, so this refreshes. */
 export function useReviewCard(cardId: CardId | null) {
   const { cards, words } = useRepositories();
@@ -106,31 +141,65 @@ export function advanceSession(saved: SavedAnswer) {
  * `advance: false` the caller shows feedback and calls `advanceSession` itself.
  */
 export function useAnswer() {
-  const { reviews } = useRepositories();
+  const { reviews, cards } = useRepositories();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({
       cardId,
       rating,
+      mode,
     }: {
       cardId: CardId;
       rating: Rating;
+      mode: PracticeMode;
       advance?: boolean;
-    }): Promise<SavedAnswer> => {
-      const { sessionId, shownAt } = useReviewSessionStore.getState();
+    }): Promise<SavedAnswer & { leech: WordId | null }> => {
+      const { sessionId, shownAt, kind } = useReviewSessionStore.getState();
       if (!sessionId) throw new Error('No active review session.');
       const now = reviewClock();
-      const result = await reviews.answer(
-        { cardId, sessionId, rating, durationMs: Math.max(0, now - shownAt) },
-        (prev) => scheduler.apply(prev, rating, now),
+      const durationMs = Math.max(0, now - shownAt);
+      if (kind === 'practice') {
+        // Practice never schedules: only Again brings the card back in this session.
+        const logId = await reviews.logPractice({ cardId, sessionId, rating, durationMs, mode });
+        return { logId, rating, due: rating === 1 ? now : now + DAY_MS, now, leech: null };
+      }
+      const result = await reviews.answer({ cardId, sessionId, rating, durationMs, mode }, (prev) =>
+        scheduler.apply(prev, rating, now),
       );
-      return { logId: result.logId, rating, due: result.card.due, now };
+      const leech = becameLeech(result.previousLapses, result.card.lapses)
+        ? result.card.wordId
+        : null;
+      return { logId: result.logId, rating, due: result.card.due, now, leech };
     },
-    onSuccess: (saved, { advance = true }) => {
+    onSuccess: ({ leech, ...saved }, { advance = true }) => {
       if (advance) advanceSession(saved);
       invalidateReviewData(queryClient);
+      if (leech) promptLeech(leech, cards, queryClient);
     },
   });
+}
+
+/**
+ * A card just reached 8 lapses (docs/04-learning-system.md): offer once to edit the word (an
+ * example or a memory aid helps) or to suspend it.
+ */
+function promptLeech(
+  wordId: WordId,
+  cards: ReturnType<typeof useRepositories>['cards'],
+  queryClient: QueryClient,
+) {
+  Alert.alert(i18n.t('review.leechTitle'), i18n.t('review.leechBody'), [
+    { text: i18n.t('review.leechLater'), style: 'cancel' },
+    { text: i18n.t('review.leechEdit'), onPress: () => router.push(`/word/${wordId}`) },
+    {
+      text: i18n.t('review.leechSuspend'),
+      onPress: async () => {
+        await cards.setSuspendedForWord(wordId, true);
+        useReviewSessionStore.getState().dispatch({ type: 'suspended', wordId }, reviewClock());
+        invalidateReviewData(queryClient);
+      },
+    },
+  ]);
 }
 
 /**
@@ -142,11 +211,22 @@ export function useOverrideAnswer() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ cardId, saved }: { cardId: CardId; saved: SavedAnswer }) => {
-      const { sessionId } = useReviewSessionStore.getState();
+      const { sessionId, kind } = useReviewSessionStore.getState();
       if (!sessionId) throw new Error('No active review session.');
+      if (kind === 'practice') {
+        await reviews.undoPractice(saved.logId);
+        const logId = await reviews.logPractice({
+          cardId,
+          sessionId,
+          rating: 3,
+          durationMs: null,
+          mode: 'typing',
+        });
+        return { logId, rating: 3, due: saved.now + DAY_MS, now: saved.now } as SavedAnswer;
+      }
       await reviews.undoAnswer(saved.logId);
       const result = await reviews.answer(
-        { cardId, sessionId, rating: 3, durationMs: null },
+        { cardId, sessionId, rating: 3, durationMs: null, mode: 'typing' },
         (prev) => scheduler.apply(prev, 3, saved.now),
       );
       return {
@@ -192,9 +272,11 @@ export function useUndoAnswer() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async () => {
-      const last = useReviewSessionStore.getState().session?.lastAnswer;
+      const { session, kind } = useReviewSessionStore.getState();
+      const last = session?.lastAnswer;
       if (!last) return false;
-      await reviews.undoAnswer(last.logId);
+      if (kind === 'practice') await reviews.undoPractice(last.logId);
+      else await reviews.undoAnswer(last.logId);
       return true;
     },
     onSuccess: (undone) => {

@@ -10,9 +10,11 @@ import type { SessionCard } from '@/domain/session';
 import {
   useDueTomorrowCount,
   useEndReview,
+  useStartPractice,
   useStartReview,
   useTodaySummary,
 } from '@/features/review/hooks/useReview';
+import { useReviewSessionStore } from '@/features/review/sessionStore';
 import { formatPercent } from '@/lib/format';
 import { Button } from '@/ui/Button';
 import { ListRow } from '@/ui/ListRow';
@@ -34,6 +36,8 @@ export function SessionSummary({ answered, goodOrEasy, missed }: SessionSummaryP
   const today = useTodaySummary();
   const end = useEndReview();
   const start = useStartReview();
+  const startPractice = useStartPractice();
+  const setup = useReviewSessionStore((s) => (s.kind === 'practice' ? s.setup : null));
   const missedWords = useQuery({
     queryKey: [...reviewKeys.all, 'missed', missed.map((m) => m.wordId)],
     queryFn: async () => {
@@ -49,7 +53,8 @@ export function SessionSummary({ answered, goodOrEasy, missed }: SessionSummaryP
   };
   const keepGoing = async () => {
     await end.mutateAsync();
-    start.mutate({ inPlace: true });
+    if (setup) startPractice.mutate({ setup, inPlace: true });
+    else start.mutate({ inPlace: true });
   };
 
   return (
@@ -58,7 +63,13 @@ export function SessionSummary({ answered, goodOrEasy, missed }: SessionSummaryP
       footer={
         <>
           <Button label={t('review.summary.done')} onPress={() => void done()} />
-          {waiting > 0 ? (
+          {setup ? (
+            <Button
+              variant="secondary"
+              label={t('review.summary.practiceMore')}
+              onPress={() => void keepGoing()}
+            />
+          ) : waiting > 0 ? (
             <Button
               variant="secondary"
               label={t('review.summary.keepGoing', { count: waiting })}
@@ -77,7 +88,9 @@ export function SessionSummary({ answered, goodOrEasy, missed }: SessionSummaryP
             })}
           </Text>
         ) : null}
-        {dueTomorrow.data !== undefined ? (
+        {setup ? (
+          <Text tone="muted">{t('review.summary.practiceNote')}</Text>
+        ) : dueTomorrow.data !== undefined ? (
           <Text tone="muted">{t('review.summary.dueTomorrow', { count: dueTomorrow.data })}</Text>
         ) : null}
       </View>

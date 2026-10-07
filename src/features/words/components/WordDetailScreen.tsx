@@ -1,11 +1,13 @@
 import { router, Stack } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 
+import { lookupUrl } from '@/domain/lookup';
 import type { WordDetails, WordId } from '@/domain/models';
 import { useDictionaries } from '@/features/dictionaries/hooks/useDictionaries';
 import { useSetWordSuspended } from '@/features/review/hooks/useReview';
+import { SpeakButton } from '@/features/speech/SpeakButton';
 import { WordTags } from '@/features/tags/components/WordTags';
 import { EditableField } from '@/features/words/components/EditableField';
 import {
@@ -61,7 +63,9 @@ export function WordDetailScreen({ id }: { id: WordId }) {
   if (!data) return null;
 
   const w = data.word;
-  const dictionaryName = dictionaries.data?.find((d) => d.id === w.dictionaryId)?.name ?? '';
+  const dictionary = dictionaries.data?.find((d) => d.id === w.dictionaryId);
+  const dictionaryName = dictionary?.name ?? '';
+  const lookup = lookupUrl(dictionary?.lookupUrl ?? null, w.term);
   const save = (patch: Parameters<typeof update.mutate>[0]['patch']) =>
     update.mutate({ id, patch });
   const emptyFields = DETAIL_FIELDS.filter((f) => !w[f]);
@@ -83,6 +87,7 @@ export function WordDetailScreen({ id }: { id: WordId }) {
           title: dictionaryName,
           headerRight: () => (
             <View style={styles.headerActions}>
+              <SpeakButton text={w.term} language={dictionary?.termLang} />
               <IconButton
                 icon={
                   w.starred
@@ -131,6 +136,13 @@ export function WordDetailScreen({ id }: { id: WordId }) {
       ) : null}
 
       <WordTags wordId={id} />
+      {lookup ? (
+        <TextButton
+          label={t('word.lookUp')}
+          accessibilityHint={t('word.lookUpHint')}
+          onPress={() => void Linking.openURL(lookup)}
+        />
+      ) : null}
 
       <View style={[styles.meta, { borderTopColor: colors.border }]}>
         <StatusBadge status={data.status} />

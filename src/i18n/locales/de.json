@@ -121,7 +121,9 @@
     "name": "Name",
     "termLang": "Sprache der Begriffe",
     "meaningLang": "Sprache der Bedeutungen",
-    "langPlaceholder": "Sprachcode, z. B. de, en, ja"
+    "langPlaceholder": "Sprachcode, z. B. de, en, ja",
+    "lookupUrl": "Nachschlage-Link (optional)",
+    "lookupUrlHint": "Eine https-Adresse mit {{placeholder}} an der Stelle des Worts."
   },
   "dictionary": {
     "addWord": "Wort hinzufügen",
@@ -173,7 +175,10 @@
     "tapToAdd": "{{field}} hinzufügen",
     "nextReview": "Nächste Wiederholung: {{date}}",
     "suspend": "Pausieren (kann ich)",
-    "unsuspend": "Fortsetzen"
+    "unsuspend": "Fortsetzen",
+    "speak": "{{term}} sprechen",
+    "lookUp": "Nachschlagen",
+    "lookUpHint": "Öffnet den Nachschlage-Link des Wörterbuchs im Browser"
   },
   "inbox": {
     "title": "Braucht eine Bedeutung",
@@ -271,7 +276,9 @@
       "dueTomorrow_one": "{{count, number}} Karte morgen fällig",
       "dueTomorrow_other": "{{count, number}} Karten morgen fällig",
       "missed": "Nicht gewusst",
-      "editHint": "Öffnet das Wort zum Bearbeiten"
+      "editHint": "Öffnet das Wort zum Bearbeiten",
+      "practiceMore": "Weiter üben",
+      "practiceNote": "Üben ändert nicht, wann Wörter fällig sind."
     },
     "recallPrompt": "Wie heißt das Wort?",
     "typeLabel": "Deine Antwort",
@@ -286,7 +293,12 @@
     "chooseWord": "Wähle das Wort",
     "optionCorrect": "{{option}}, richtige Antwort",
     "optionWrong": "{{option}}, deine Antwort, falsch",
-    "notQuite": "Nicht ganz"
+    "notQuite": "Nicht ganz",
+    "leechTitle": "Dieses Wort will nicht hängen bleiben",
+    "leechBody": "Du hast es 8 Mal vergessen. Ein Beispiel oder eine Eselsbrücke hilft oft, oder pausiere es vorerst.",
+    "leechEdit": "Wort bearbeiten",
+    "leechSuspend": "Pausieren",
+    "leechLater": "Nicht jetzt"
   },
   "settings": {
     "dailyNewLimit": "Neue Wörter pro Tag",
@@ -363,5 +375,26 @@
     "reminderLast": "Deine letzte Sicherung war am {{date}}.",
     "reminderAction": "Sichern",
     "firstLaunchRestore": "Sicherung wiederherstellen"
+  },
+  "practice": {
+    "title": "Üben",
+    "intro": "Übe beliebige Wörter, so oft du willst. Üben ändert nie, wann Wörter fällig sind.",
+    "source": "Was üben",
+    "sourceDictionary": "Ein Wörterbuch",
+    "sourceTag": "Ein Tag",
+    "sourceWeak": "Schwache Wörter",
+    "weakHint": "Wörter, die du 3 Mal oder öfter vergessen hast, oder zweimal in den letzten 30 Tagen.",
+    "chooseDictionary": "Wörterbuch wählen",
+    "chooseTag": "Tag wählen",
+    "modes": "Modi",
+    "modeFlashcard": "Karteikarten",
+    "modeTyping": "Tippen",
+    "modeChoice": "Auswahlfragen",
+    "modesHint": "Tippen gibt es für Karten Bedeutung → Wort; andere Karten nutzen deine anderen Modi oder Karteikarten.",
+    "count": "Karten",
+    "start": "Üben starten",
+    "nothing": "Hier gibt es noch nichts zu üben.",
+    "todayEntry": "Üben",
+    "todayEntryHint": "Ein Wörterbuch, einen Tag oder schwache Wörter üben"
   }
 }

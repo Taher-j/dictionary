@@ -6,7 +6,9 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { CardState, type Rating } from '@/domain/models';
 import type { Choice } from '@/domain/practice/choice';
 import { pickMode, type PracticeMode } from '@/domain/practice/mode';
+import { pickPracticeMode } from '@/domain/practice/practice';
 import { currentCard, isFinished } from '@/domain/session';
+import { useDictionaries } from '@/features/dictionaries/hooks/useDictionaries';
 import { ChoiceCard } from '@/features/review/components/ChoiceCard';
 import { FlashCard } from '@/features/review/components/FlashCard';
 import { RatingButtons } from '@/features/review/components/RatingButtons';
@@ -43,9 +45,13 @@ export function ReviewScreen() {
   const { colors } = useTheme();
   const session = useReviewSessionStore((s) => s.session);
   const dispatch = useReviewSessionStore((s) => s.dispatch);
+  const kind = useReviewSessionStore((s) => s.kind);
+  const setup = useReviewSessionStore((s) => s.setup);
+  const practice = kind === 'practice' && setup !== null;
   const current = session ? currentCard(session) : null;
   const card = useReviewCard(current?.cardId ?? null);
   const { flashcardsOnly } = useSettings();
+  const dictionaries = useDictionaries();
   const choice = useChoice(card.data?.card ?? null, card.data?.word ?? null);
   const answer = useAnswer();
   const override = useOverrideAnswer();
@@ -82,13 +88,19 @@ export function ReviewScreen() {
   const total = session.answered + remaining;
   const busy = answer.isPending || undo.isPending || override.isPending;
   // Choice is only possible for new and learning cards; wait for its options before deciding.
-  const needsChoice =
-    !flashcardsOnly && data !== null && data !== undefined && data.card.state !== CardState.Review;
+  const needsChoice = practice
+    ? setup.modes.includes('choice')
+    : !flashcardsOnly &&
+      data !== null &&
+      data !== undefined &&
+      data.card.state !== CardState.Review;
   // Per-attempt state resets for every card shown, including a requeued repeat.
   const attemptKey = `${current?.cardId ?? ''}-${session.answered}`;
   const nextMode =
     data && (!needsChoice || choice.isSuccess)
-      ? pickMode(data.card, { flashcardsOnly, choiceAvailable: Boolean(choice.data) })
+      ? practice
+        ? pickPracticeMode(data.card, setup.modes, session.answered, Boolean(choice.data))
+        : pickMode(data.card, { flashcardsOnly, choiceAvailable: Boolean(choice.data) })
       : null;
   if (nextMode && attempt?.key !== attemptKey) {
     setAttempt({ key: attemptKey, mode: nextMode, choice: choice.data ?? null });
@@ -100,7 +112,14 @@ export function ReviewScreen() {
     if (!current) return;
     haptic();
     try {
-      setSaved(await answer.mutateAsync({ cardId: current.cardId, rating, advance: false }));
+      setSaved(
+        await answer.mutateAsync({
+          cardId: current.cardId,
+          rating,
+          mode: mode ?? 'flashcard',
+          advance: false,
+        }),
+      );
     } catch (error) {
       showToast(t('review.saveFailed'));
       throw error;
@@ -122,7 +141,7 @@ export function ReviewScreen() {
     if (!current || busy) return;
     haptic();
     answer.mutate(
-      { cardId: current.cardId, rating },
+      { cardId: current.cardId, rating, mode: 'flashcard' },
       { onError: () => showToast(t('review.saveFailed')) },
     );
   };
@@ -134,7 +153,7 @@ export function ReviewScreen() {
       footer={
         mode !== 'flashcard' ? null : session.revealed && data ? (
           <RatingButtons
-            preview={scheduler.preview(data.card, reviewClock())}
+            preview={practice ? undefined : scheduler.preview(data.card, reviewClock())}
             disabled={busy}
             onRate={rate}
           />
@@ -205,6 +224,7 @@ export function ReviewScreen() {
             direction={data.card.direction}
             revealed={session.revealed}
             onReveal={() => dispatch({ type: 'reveal' }, reviewClock())}
+            termLang={dictionaries.data?.find((d) => d.id === data.word.dictionaryId)?.termLang}
           />
         </View>
       ) : null}

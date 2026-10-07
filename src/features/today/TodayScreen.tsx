@@ -37,6 +37,11 @@ export function TodayScreen() {
     <Screen title={t('tabs.today')} padded={false}>
       <BackupReminder />
       <TodayReviewCard />
+      <ListRow
+        title={t('practice.todayEntry')}
+        subtitle={t('practice.todayEntryHint')}
+        onPress={() => router.push('/practice')}
+      />
       {count > 0 ? (
         <ListRow
           title={t('today.inbox', { count })}

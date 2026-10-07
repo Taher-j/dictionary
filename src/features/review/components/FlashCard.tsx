@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import type { CardDirection, Word } from '@/domain/models';
+import { SpeakButton } from '@/features/speech/SpeakButton';
 import { Text } from '@/ui/Text';
 import { radius, spacing } from '@/ui/tokens';
 import { useTheme } from '@/ui/useTheme';
@@ -23,13 +24,15 @@ export interface FlashCardProps {
   direction: CardDirection;
   revealed: boolean;
   onReveal: () => void;
+  /** The dictionary's term language, for the speak button on the back. */
+  termLang?: string | null;
 }
 
 /**
  * A flashcard in either direction. Tap anywhere to reveal. Flips; with reduced motion it
  * crossfades. Screen readers hear the prompt and a hint, then focus moves to the answer.
  */
-export function FlashCard({ word, direction, revealed, onReveal }: FlashCardProps) {
+export function FlashCard({ word, direction, revealed, onReveal, termLang }: FlashCardProps) {
   const { t } = useTranslation();
   const { colors } = useTheme();
   const reduceMotion = useReducedMotion();
@@ -122,6 +125,9 @@ export function FlashCard({ word, direction, revealed, onReveal }: FlashCardProp
                 {word.term}
               </Text>
             )}
+            <View style={styles.speak}>
+              <SpeakButton text={word.term} language={termLang} />
+            </View>
             <View ref={recall ? undefined : answerRef} accessible accessibilityLabel={meaning}>
               {word.translation ? (
                 <Text variant="meaning" style={styles.center}>
@@ -148,6 +154,9 @@ function answerLabel(word: Word): string {
 }
 
 const styles = StyleSheet.create({
+  speak: {
+    alignItems: 'center',
+  },
   container: {
     flex: 1,
     minHeight: 240,

@@ -44,6 +44,7 @@ export function DictionaryFormScreen({ dictionaryId, firstLaunch }: DictionaryFo
         name: existing.data?.name ?? '',
         termLang: existing.data?.termLang ?? '',
         meaningLang: existing.data?.meaningLang ?? '',
+        lookupUrl: existing.data?.lookupUrl ?? '',
       }}
       busy={create.isPending || update.isPending}
       onSubmit={async (values) => {
@@ -51,6 +52,7 @@ export function DictionaryFormScreen({ dictionaryId, firstLaunch }: DictionaryFo
           name: values.name,
           termLang: values.termLang.trim() || null,
           meaningLang: values.meaningLang.trim() || null,
+          lookupUrl: values.lookupUrl.trim() || null,
         };
         if (dictionaryId) {
           await update.mutateAsync({ id: dictionaryId, patch: fields });

@@ -72,6 +72,10 @@ export default function RootLayout() {
                     options={{ headerShown: true, title: t('trash.title') }}
                   />
                   <Stack.Screen
+                    name="practice"
+                    options={{ headerShown: true, title: t('practice.title') }}
+                  />
+                  <Stack.Screen
                     name="backup"
                     options={{ headerShown: true, title: t('backup.title') }}
                   />
