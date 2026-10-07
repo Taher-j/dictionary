@@ -56,16 +56,18 @@ Undo restores the card (state New, reps 0) and deletes the log, summary, Today c
 relaunch, "All caught up" with next review time, word detail "Young" + next review date, Suspend
 and Unsuspend from word detail keep the schedule.
 
+2026-10-07: "I know this" suspends the card (no log, schedule kept) and moves on; with Remove
+animations on, the reveal crossfades (screen recording); the normal flip is unchanged. Found and
+fixed: seeded cards had memory states ts-fsrs rejects (crash on reveal); Reanimated skipped the
+crossfade under reduced motion.
+
 ### Next steps
 
-1. On the phone: "I know this" from the session menu (the "BaumHundKatze" learning card was due at
-   08:50), and the crossfade with reduced motion (Android: Settings → Accessibility → Remove
-   animations). Not yet checked.
-2. Owner: one full session with TalkBack.
-3. The phone runs the **dev build** with test data (dictionary "Test": Haus, BaumHundKatze).
-   Delete it (Settings → Developer tools → Delete all data), then build and install the release:
+1. Owner: one full session with TalkBack.
+2. The phone runs the **dev build** with fresh seeded data (50,000 words, 2026-10-07). Delete it
+   (Settings → Developer tools → Delete all data), then build and install the release:
    `cd android && ./gradlew assembleRelease`, `adb install -r app/build/outputs/apk/release/app-release.apk`.
-4. Tick the last done-when check, set Milestone 4 to Done, plan Milestone 3.
+3. Tick the last done-when check, set Milestone 4 to Done, plan Milestone 3.
 
 ### Known issues
 
@@ -97,3 +99,4 @@ and Unsuspend from word detail keep the schedule.
 | 2026-10-05 | Milestone 1: schema + 3 migrations, repositories, startup with snapshot, dev tools; Q6 decided (FTS5); fixed WAL growth | Milestone 2 — Dictionaries and words (plan first) |
 | 2026-10-05/06 | Milestone 2: Library, dictionary list, quick add, word detail, Inbox, Trash; keyboard-controller | Milestone 4 — Review core (plan first) |
 | 2026-10-06 | M2 wrap-up (keyboard, sheet fix), release build; M4 domain, data and UI, most phone checks | M4 next steps above, then Milestone 3 |
+| 2026-10-07 | M4 phone checks: "I know this", reduced-motion crossfade; fixed seeder memory states and skipped crossfade; Q7 opened | TalkBack session (owner), release build, then Milestone 3 |

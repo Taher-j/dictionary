@@ -8,6 +8,7 @@ Append new decisions at the bottom of the log with a date. Do not rewrite histor
 | --- | --- | --- |
 | Q1 | Final app name. Placeholder in use (see below). The display name can change at any time. | Milestone 11 at the latest |
 | Q2 | Final Android package / iOS bundle identifier and URL scheme. Placeholders in use (see below). | **Before Milestone 5** |
+| Q7 | A card whose memory state ts-fsrs rejects (for example from a bad import) currently crashes the review screen. Skip it and report it, or repair it (reset to New)? Only seeded data has hit this so far (fixed 2026-10-07). | Milestone 6 (import) |
 
 ## Placeholders in use
 
