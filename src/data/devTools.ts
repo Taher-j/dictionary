@@ -195,6 +195,14 @@ export function createDevTools(
             const state =
               roll < 0.2 ? CardState.New : roll < 0.35 ? CardState.Learning : CardState.Review;
             const scheduledDays = state === CardState.Review ? 1 + Math.floor(rand() * 200) : 0;
+            // Memory state as ts-fsrs produces it: 0/0 for a new card, stability > 0 once reviewed.
+            // Anything else is rejected as an invalid memory state.
+            const stability =
+              state === CardState.Learning
+                ? 0.1 + rand() * 2
+                : state === CardState.Review
+                  ? scheduledDays
+                  : 0;
             const cardId = newId();
             cardIds.push(cardId);
             cardRows.push({
@@ -203,8 +211,8 @@ export function createDevTools(
               direction: 'recognition',
               state,
               due: at + Math.floor((rand() - 0.3) * scheduledDays) * DAY_MS,
-              stability: scheduledDays,
-              difficulty: 1 + rand() * 9,
+              stability,
+              difficulty: state === CardState.New ? 0 : 1 + rand() * 9,
               scheduledDays,
               reps: state === CardState.New ? 0 : 1 + Math.floor(rand() * 10),
               lastReview: state === CardState.New ? null : at - Math.floor(rand() * 30) * DAY_MS,

@@ -1,5 +1,9 @@
 /** @jest-environment node */
 import { createDevTools } from '@/data/devTools';
+import { cards } from '@/data/db/schema';
+import { toCard } from '@/data/repositories/cardRepository';
+import { CardState } from '@/domain/models';
+import { createScheduler } from '@/domain/scheduler';
 import { createIdGenerator } from '@/lib/ids';
 import { createTestContext } from '@/data/testing/testDatabase';
 
@@ -21,7 +25,7 @@ function setup() {
 
 describe('devTools', () => {
   it('seeds words, cards and review logs, benchmarks, and wipes', async () => {
-    const { devTools, repos } = setup();
+    const { devTools, repos, db, time } = setup();
     const progress: string[] = [];
     await devTools.seed({ words: 1200, reviewLogs: 1100, meaningRatio: 0.5 }, (p) =>
       progress.push(`${p.phase}:${p.done}`),
@@ -44,6 +48,14 @@ describe('devTools', () => {
     const [dictionary] = await repos.dictionaries.list();
     const page = await repos.words.list({ dictionaryId: dictionary?.id, sort: 'alpha' });
     expect(page.items).toHaveLength(50);
+
+    // Seeded cards hold a memory state the scheduler accepts.
+    const scheduler = createScheduler();
+    const rows = db.select().from(cards).all();
+    expect(rows.some((row) => row.state === CardState.Learning)).toBe(true);
+    for (const row of rows) {
+      expect(() => scheduler.preview(toCard(row), time())).not.toThrow();
+    }
 
     const results = await devTools.benchmark(3);
     expect(results.map((r) => r.name)).toHaveLength(8);
